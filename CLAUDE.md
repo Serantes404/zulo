@@ -6,7 +6,7 @@ App de inventario visual para clubs: foto del almacén → la IA (Ollama, Qwen-V
 
 - **Spec:** `docs/specs/2026-10-14-zulo-design.md`
 - **Plan:** `docs/plans/2026-10-14-zulo-plan.md`. Se ejecuta tarea por tarea, con TDD y un commit por tarea. Lee la sección "Rulings durante la ejecución" al final del plan y añade allí cualquier desviación nueva.
-- **Estado:** tareas 1-4 hechas (scaffold, IA, base de datos aplicada en Supabase con tipos en `lib/database.types.ts`). Tarea 5: pasos 1-2 hechos (`lib/safeNext.ts` + test). Continúa por la Tarea 5, paso 3.
+- **Estado:** tareas 1-4 hechas (scaffold, IA, base de datos aplicada en Supabase con tipos en `lib/database.types.ts`). Tareas 5 (login con email+contraseña) y 6 hechas. Continúa por la Tarea 7. Pendiente de decidir: migración para que `groups.created_by` y `loans.user_id` sean `on delete set null` (ahora impiden borrar usuarios).
 
 ## Reglas
 - Next 16: usa `proxy.ts`, no `middleware.ts`. Consulta `node_modules/next/dist/docs/` antes de escribir APIs de Next.
