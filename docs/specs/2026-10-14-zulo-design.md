@@ -35,7 +35,7 @@ Los clubs y grupos (scouts, deportes, teatro…) guardan su material en almacene
 
 ### Dentro del MVP
 
-- Login con magic link (Supabase Auth).
+- Login con email y contraseña (Supabase Auth guarda la contraseña como hash bcrypt). Sin confirmación por email ni recuperación de contraseña en esta versión: el SMTP por defecto de Supabase solo permite unos pocos emails por hora.
 - Crear grupo, link de invitación, roles admin/member.
 - Varios almacenes por grupo.
 - **IA:** foto o boceto → zonas propuestas (Qwen-VL vía Ollama).
@@ -82,7 +82,7 @@ Móvil / navegador ──► Next.js en Vercel ──► Supabase (Auth · Postg
 
 ```
 app/
-  login/                          magic link
+  login/                          entrar / crear cuenta con email y contraseña
   welcome/                        pedir el nombre en el primer login
   join/[code]/                    unirse a un grupo
   page.tsx                        mis grupos + crear grupo
@@ -251,7 +251,7 @@ En el plano, cada zona muestra un indicador si alguno de sus items tiene unidade
 1. Repo en GitHub (`main` protegido; el trabajo se hace en ramas).
 2. Proyecto en Supabase. Las migraciones se aplican con la CLI de Supabase (`supabase db push`).
 3. Vercel conectado al repo y variables de entorno configuradas.
-4. En Supabase Auth, añadir la URL de Vercel a *Redirect URLs* para que funcione el magic link.
+4. En Supabase Auth, comprobar que *Confirm email* está desactivado (Authentication → Sign In / Providers → Email).
 
 ## 14. Riesgos
 
