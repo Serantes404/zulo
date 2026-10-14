@@ -1,0 +1,42 @@
+-- Comprobaciones extra de seguridad (Storage, perfiles, roles, devoluciones, anon).
+-- Ejecutar entero en el SQL Editor de Supabase. Todo se deshace al final (rollback).
+-- Si algo falla verás un error que empieza por "FALLO:". Si no aparece ningún error, ha pasado.
+begin;
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000000a','ana@test.dev'),('00000000-0000-0000-0000-00000000000b','beto@test.dev'),('00000000-0000-0000-0000-00000000000c','carla@test.dev');
+create temp table t (k text primary key, id uuid, txt text) on commit drop;
+grant all on t to authenticated;
+select set_config('request.jwt.claims','{"sub":"00000000-0000-0000-0000-00000000000a"}',true);
+set local role authenticated;
+insert into t (k,id) select 'g', public.create_group('G');
+insert into t (k,txt) select 'code', invite_code from public.groups;
+with w as (insert into public.warehouses (group_id,name) select id,'Z' from t where k='g' returning id) insert into t(k,id) select 'w',id from w;
+with z as (insert into public.zones (warehouse_id,label,color,x,y,w,h) select id,'A','#2E86AB',0,0,.5,.5 from t where k='w' returning id) insert into t(k,id) select 'z',id from z;
+with i as (insert into public.items (zone_id,name,quantity_total) select id,'Item',2 from t where k='z' returning id) insert into t(k,id) select 'i',id from i;
+insert into storage.objects (bucket_id,name) select 'photos', id::text || '/plans/p.jpg' from t where k='g';
+do $$ begin delete from public.zones where id=(select id from t where k='z'); raise exception 'FALLO: borrar zona con material'; exception when others then if sqlerrm not like '%items_zone_id_fkey%' then raise; end if; end $$;
+reset role;
+select set_config('request.jwt.claims','{"sub":"00000000-0000-0000-0000-00000000000b"}',true);
+set local role authenticated;
+select public.join_group((select txt from t where k='code'));
+do $$ begin insert into storage.objects (bucket_id,name) select 'photos', id::text||'/plans/x.jpg' from t where k='g'; raise exception 'FALLO: member sube plano'; exception when others then if sqlerrm not like 'new row violates row-level security policy%' then raise; end if; end $$;
+insert into storage.objects (bucket_id,name) select 'photos', id::text||'/loans/x.jpg' from t where k='g';
+do $$ begin if (select count(*) from public.profiles) <> 2 then raise exception 'FALLO: Beto debería ver 2 perfiles'; end if; end $$;
+do $$ begin perform public.regenerate_invite((select id from t where k='g')); raise exception 'FALLO: member regenera'; exception when others then if sqlerrm <> 'FORBIDDEN' then raise; end if; end $$;
+update public.items set name='hack' where id=(select id from t where k='i');
+insert into t(k,id) select 'l', public.checkout_item((select id from t where k='i'),1,'x',current_date-1,'p');
+do $$ begin if not (select has_overdue from public.item_availability where item_id=(select id from t where k='i')) then raise exception 'FALLO: debería estar vencido'; end if; end $$;
+select public.return_loan((select id from t where k='l'),'p2','damaged','  ');
+do $$ begin perform public.return_loan((select id from t where k='l'),'p2','ok',''); raise exception 'FALLO'; exception when others then if sqlerrm <> 'ALREADY_RETURNED' then raise; end if; end $$;
+do $$ begin if (select return_notes from public.loans where id=(select id from t where k='l')) is not null then raise exception 'FALLO: notas vacías deberían ser null'; end if; end $$;
+reset role;
+select set_config('request.jwt.claims','{"sub":"00000000-0000-0000-0000-00000000000c"}',true);
+set local role authenticated;
+do $$ begin if (select count(*) from storage.objects) <> 0 or (select count(*) from public.profiles) <> 1 or (select count(*) from public.loans) <> 0 then raise exception 'FALLO: Carla ve datos ajenos'; end if; end $$;
+do $$ begin perform public.checkout_item((select id from t where k='i'),1,'x',current_date,'p'); raise exception 'FALLO'; exception when others then if sqlerrm <> 'FORBIDDEN' then raise; end if; end $$;
+reset role;
+select set_config('request.jwt.claims','',true);
+set local role anon;
+do $$ begin perform public.create_group('x'); raise exception 'FALLO'; exception when others then if sqlerrm <> 'NOT_AUTHENTICATED' then raise; end if; end $$;
+reset role;
+do $$ begin if (select name from public.items limit 1) <> 'Item' then raise exception 'FALLO: member editó item'; end if; end $$;
+rollback;
