@@ -9,6 +9,7 @@ App de inventario visual para clubs: foto del almacén → la IA (Ollama, Qwen-V
 - **Estado (fin del 2026-10-14):** tareas 1-8 hechas y con commit. Tarea 9 (editor de zonas) escrita y con commit, pero **sin probar a mano**: lo primero es que Santi haga el paso 4 de la Tarea 9 (necesita abrir la app de Ollama; `ollama list` debe mostrar `qwen2.5vl:7b`). Si funciona, seguir por la Tarea 10. Si falla, depurar antes de seguir.
 - **Cambios respecto al plan** (detalle en "Rulings durante la ejecución"): login con email+contraseña en vez de magic link ("Confirm email" desactivado en Supabase, sin recuperación de contraseña); todas las páginas leen sesión/params dentro de `<Suspense>` por `cacheComponents: true`.
 - **Pendiente de decidir con Santi:** (1) migración para que `groups.created_by` y `loans.user_id` sean `on delete set null` (ahora impiden borrar usuarios; RGPD); (2) aviso de `Date.now()` en `components/Header.tsx` en la consola de `next dev`; (3) la prueba de la IA con fotos reales (T3 paso 9) sigue pendiente y es el mayor riesgo.
+- **Repo:** aún no hay repo en GitHub (sin remote, `gh` no instalado): todo está solo en local. Mañana, antes de nada: `brew install gh`, `gh auth login` y, con el OK de Santi, `gh repo create zulo --private --source=. --push`.
 - **Prioridades:** entrega hacia el 2026-10-21. Primero funcionalidad; el frontend bonito va al final. Adelantar el despliegue a Vercel (T14) a mitad de semana.
 - **Ledger de ejecución:** `.superpowers/sdd/2026-10-14-zulo-plan/progress.md` (git-ignored).
 
