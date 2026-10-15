@@ -1,6 +1,7 @@
 'use client';
 import { useId, useState } from 'react';
 import { uploadPhoto } from '@/lib/photos';
+import { toBrowserImage } from '@/lib/heic';
 import type { PhotoKind } from '@/lib/photoPath';
 
 type Props = {
@@ -17,15 +18,18 @@ export function PhotoCapture({ groupId, kind, label, onUploaded }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   async function onChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+    const original = e.target.files?.[0];
     e.target.value = '';
-    if (!file) return;
+    if (!original) return;
     setUploading(true);
     setError(null);
+    let file: File;
     let path: string;
     try {
+      file = await toBrowserImage(original);
       path = await uploadPhoto(file, groupId, kind);
-    } catch {
+    } catch (err) {
+      console.error('uploadPhoto', err);
       setError('No se ha podido subir la foto. Inténtalo de nuevo.');
       setUploading(false);
       return;
