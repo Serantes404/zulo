@@ -1,4 +1,5 @@
 import { MAX_ZONES, type Zone } from '@/lib/ai/normalize';
+import { uuid } from './uuid';
 
 export const PALETTE = ['#E4572E', '#2E86AB', '#3BB273', '#F2A541', '#8E5DB8', '#D64C8C', '#1B998B', '#6C757D'] as const;
 export const MIN_SIZE = 0.02;
@@ -13,8 +14,6 @@ export type EditableZone = {
   w: number;
   h: number;
 };
-
-const uuid = () => crypto.randomUUID();
 
 export function fromDetected(zones: Zone[], makeKey: () => string = uuid): EditableZone[] {
   return zones.map((z, i) => ({
