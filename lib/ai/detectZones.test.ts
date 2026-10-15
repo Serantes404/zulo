@@ -36,7 +36,7 @@ describe('detectZonesFromImage', () => {
   });
 
   it('devuelve UNAVAILABLE si la llamada falla', async () => {
-    const call = vi.fn().mockRejectedValue(new Error('OLLAMA_HTTP_500'));
+    const call = vi.fn().mockRejectedValue(new Error('GEMINI_HTTP_500'));
     expect(await detectZonesFromImage('b64', img, call)).toEqual({ ok: false, reason: 'UNAVAILABLE' });
   });
 

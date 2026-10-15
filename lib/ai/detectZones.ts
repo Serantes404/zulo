@@ -1,4 +1,4 @@
-import { callVisionModel } from './ollama';
+import { callVisionModel } from './gemini';
 import { normalizeZones, type BoxFormat, type Zone } from './normalize';
 import { parseAiContent } from './schema';
 
