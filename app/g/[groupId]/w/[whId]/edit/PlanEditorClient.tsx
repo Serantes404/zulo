@@ -3,8 +3,9 @@ import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ZoneEditor } from '@/components/ZoneEditor';
 import { PhotoCapture } from '@/components/PhotoCapture';
+import { SketchPad } from '@/components/SketchPad';
 import { Button } from '@/components/ui/button';
-import { imageAspect } from '@/lib/photos';
+import { imageAspect, uploadPhoto } from '@/lib/photos';
 import { fromDetected, type EditableZone } from '@/lib/zones';
 import type { DetectResult } from '@/lib/ai/detectZones';
 import { detectZonesAction, saveZones, setPlanImage } from './actions';
@@ -30,6 +31,8 @@ export function PlanEditorClient({ groupId, warehouseId, name, imageUrl: initial
   const [aspect, setAspect] = useState(aspectRatio);
   const [zones, setZones] = useState(initialZones);
   const [manual, setManual] = useState(initialZones.length > 0);
+  const [sketching, setSketching] = useState(false);
+  const [uploadingSketch, setUploadingSketch] = useState(false);
   const [detecting, setDetecting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -70,6 +73,23 @@ export function PlanEditorClient({ groupId, warehouseId, name, imageUrl: initial
     if (zones.length === 0) await runDetection();
   }
 
+  async function onSketchDone(file: File) {
+    setUploadingSketch(true);
+    setMessage(null);
+    let path: string;
+    try {
+      path = await uploadPhoto(file, groupId, 'plans');
+    } catch (err) {
+      console.error('uploadSketch', err);
+      setMessage('No se ha podido subir el dibujo. Inténtalo de nuevo.');
+      setUploadingSketch(false);
+      return;
+    }
+    setUploadingSketch(false);
+    setSketching(false);
+    await onPlanUploaded(path, file);
+  }
+
   async function redetect() {
     if (zones.length > 0 && !confirm('Esto reemplaza las zonas actuales por las que detecte la IA. ¿Seguir?')) return;
     await runDetection();
@@ -90,13 +110,17 @@ export function PlanEditorClient({ groupId, warehouseId, name, imageUrl: initial
     <main className="mx-auto max-w-3xl space-y-4 p-4">
       <h1 className="text-2xl font-semibold">Plano de {name}</h1>
 
-      {!showEditor && (
+      {!showEditor && !sketching && (
         <div className="space-y-3">
-          <p>Sube una foto o un boceto del almacén y la IA propondrá las zonas.</p>
-          <PhotoCapture groupId={groupId} kind="plans" label="Subir foto o boceto" onUploaded={onPlanUploaded} />
-          <Button variant="outline" onClick={() => setManual(true)}>Dibujar a mano sobre cuadrícula</Button>
+          <p>Dibuja el almacén visto desde arriba y la IA propondrá las zonas. También puedes subir una foto o un boceto.</p>
+          <div className="flex flex-wrap items-start gap-2">
+            <Button onClick={() => setSketching(true)}>Dibujar el plano aquí</Button>
+            <PhotoCapture groupId={groupId} kind="plans" label="Subir foto o boceto" onUploaded={onPlanUploaded} />
+          </div>
         </div>
       )}
+
+      {!showEditor && sketching && <SketchPad busy={uploadingSketch} onDone={onSketchDone} />}
 
       {detecting && (
         <div role="status" className="flex items-center gap-3 rounded-lg border p-3">

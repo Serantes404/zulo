@@ -2,6 +2,7 @@
 // Aquí se reordenan a box = [x1, y1, x2, y2] para el resto de la app (AI_BOX_FORMAT=relative1000).
 export const PROMPT = `You are looking at a photo or a hand-drawn sketch of a storage room or shelving unit.
 Detect every separate compartment, shelf section or bay that could hold equipment.
+If it is a top-down sketch (black lines on white), each enclosed area or drawn rectangle against the walls is one zone; ignore the outer walls and empty floor. In a sketch, use an empty label unless a name is written inside the zone.
 For each one return its box_2d and a short label in Spanish (max 3 words)
 if a sign is readable or the contents are clearly recognisable; otherwise use an empty string.`;
 
