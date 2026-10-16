@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { createWarehouse, makeAdmin, regenerateInvite } from './actions';
 import { InviteLink } from './InviteLink';
+import { DeleteWarehouseButton } from './DeleteWarehouseButton';
 
 type Params = Promise<{ groupId: string }>;
 
@@ -44,8 +45,9 @@ async function GroupContent({ params }: { params: Params }) {
         {warehouses && warehouses.length > 0 ? (
           <ul className="space-y-2">
             {warehouses.map((w) => (
-              <li key={w.id}>
-                <Link href={`/g/${groupId}/w/${w.id}`} className="block rounded-lg border p-4 hover:bg-muted">{w.name}</Link>
+              <li key={w.id} className="flex items-start gap-2">
+                <Link href={`/g/${groupId}/w/${w.id}`} className="block flex-1 rounded-lg border p-4 hover:bg-muted">{w.name}</Link>
+                {isAdmin && <DeleteWarehouseButton groupId={groupId} warehouseId={w.id} name={w.name} />}
               </li>
             ))}
           </ul>

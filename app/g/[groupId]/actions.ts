@@ -2,6 +2,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireUser } from '@/lib/auth';
+import { deleteWarehouseError } from '@/lib/warehouseDelete';
 
 export async function createWarehouse(groupId: string, formData: FormData) {
   const name = String(formData.get('name') ?? '').trim().slice(0, 80);
@@ -25,5 +26,18 @@ export async function regenerateInvite(groupId: string) {
 export async function makeAdmin(groupId: string, userId: string) {
   const { supabase } = await requireUser();
   await supabase.from('group_members').update({ role: 'admin' }).eq('group_id', groupId).eq('user_id', userId);
+  revalidatePath(`/g/${groupId}`);
+}
+
+export async function deleteWarehouse(groupId: string, warehouseId: string): Promise<{ error: string } | undefined> {
+  const { supabase } = await requireUser();
+  const { data, error } = await supabase
+    .from('warehouses')
+    .delete()
+    .eq('id', warehouseId)
+    .eq('group_id', groupId)
+    .select('id');
+  const message = deleteWarehouseError(error, data?.length ?? 0);
+  if (message) return { error: message };
   revalidatePath(`/g/${groupId}`);
 }
