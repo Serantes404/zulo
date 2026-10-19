@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseStoredLayout, validatePlan, DEFAULT_LAYOUT } from './layout';
+import { parseStoredLayout, validatePlan, validatePlanUpdate, DEFAULT_LAYOUT } from './layout';
 
 const ok = {
   doors: [{ wall: 'left', start: 0.8, end: 0.86 }],
@@ -29,4 +29,27 @@ describe('validatePlan', () => {
     expect(validatePlan({ layout: ok, aspectRatio: 5 })).toBe('El plano no es válido.');
     expect(validatePlan({ layout: ok, aspectRatio: Number.NaN })).toBe('El plano no es válido.');
   });
+});
+
+describe('validatePlanUpdate', () => {
+  const sketch = { path: 'g/plans/a.png', source: 'sketch' as const };
+  const photo = { path: 'g/plans/b.jpg', source: 'photo' as const };
+  const bad = 'El plano no es válido.';
+  it('acepta un boceto con layout', () =>
+    expect(validatePlanUpdate({ layout: DEFAULT_LAYOUT, aspectRatio: 1.5, image: sketch })).toBeNull());
+  it('acepta un layout sin imagen nueva', () =>
+    expect(validatePlanUpdate({ layout: ok as never, aspectRatio: 0.8 })).toBeNull());
+  it('acepta una foto con layout null', () =>
+    expect(validatePlanUpdate({ layout: null, aspectRatio: 1.7, image: photo })).toBeNull());
+  it('rechaza layout null con boceto', () =>
+    expect(validatePlanUpdate({ layout: null, aspectRatio: 1, image: sketch })).toBe(bad));
+  it('rechaza layout null sin imagen', () =>
+    expect(validatePlanUpdate({ layout: null, aspectRatio: 1 })).toBe(bad));
+  it('rechaza proporciones malas', () => {
+    expect(validatePlanUpdate({ layout: DEFAULT_LAYOUT, aspectRatio: 9, image: sketch })).toBe(bad);
+    expect(validatePlanUpdate({ layout: null, aspectRatio: 0, image: photo })).toBe(bad);
+    expect(validatePlanUpdate({ layout: null, aspectRatio: Number.NaN, image: photo })).toBe(bad);
+  });
+  it('rechaza un origen desconocido', () =>
+    expect(validatePlanUpdate({ layout: DEFAULT_LAYOUT, aspectRatio: 1, image: { path: 'x', source: 'otro' as never } })).toBe(bad));
 });

@@ -35,3 +35,20 @@ export function validatePlan(plan: { layout: unknown; aspectRatio: number }): st
   if (!parseStoredLayout(plan.layout) || !okAspect) return 'El plano no es válido.';
   return null;
 }
+
+export type PlanUpdate = {
+  layout: Layout | null;
+  aspectRatio: number;
+  image?: { path: string; source: PlanSource };
+};
+
+// Valida lo que saveZones va a escribir en el almacén. La comprobación de la ruta de la imagen se hace en la acción.
+export function validatePlanUpdate(plan: PlanUpdate): string | null {
+  const bad = 'El plano no es válido.';
+  const { image } = plan;
+  if (image && image.source !== 'sketch' && image.source !== 'photo') return bad;
+  if (plan.layout !== null) return validatePlan({ layout: plan.layout, aspectRatio: plan.aspectRatio });
+  if (!image || image.source !== 'photo') return bad;
+  if (!Number.isFinite(plan.aspectRatio) || plan.aspectRatio <= 0) return bad;
+  return null;
+}

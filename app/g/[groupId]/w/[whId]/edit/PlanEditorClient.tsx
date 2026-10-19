@@ -7,9 +7,12 @@ import { SketchPad } from '@/components/SketchPad';
 import { Button } from '@/components/ui/button';
 import { imageAspect, uploadPhoto } from '@/lib/photos';
 import { fromDetected, type EditableZone } from '@/lib/zones';
-import { DEFAULT_LAYOUT, type Layout, type PlanSource } from '@/lib/layout';
+import { DEFAULT_LAYOUT, MAX_ASPECT, MIN_ASPECT, type Layout, type PlanSource } from '@/lib/layout';
 import type { DetectResult } from '@/lib/ai/detectZones';
-import { detectZonesAction, saveZones, setPlanImage } from './actions';
+import { detectZonesAction, previewPlanImage, saveZones } from './actions';
+
+type Pending = { path: string; source: PlanSource };
+const clampAspect = (a: number) => Math.min(MAX_ASPECT, Math.max(MIN_ASPECT, a));
 
 const AI_MESSAGES = {
   NO_ZONES: 'No he podido detectar zonas, dibújalas tú.',
@@ -44,6 +47,7 @@ export function PlanEditorClient({
   const [source, setSource] = useState<PlanSource | null>(planSource);
   const [layout, setLayout] = useState<Layout | null>(initialLayout);
   const [uploadKind, setUploadKind] = useState<PlanSource>('photo');
+  const [pending, setPending] = useState<Pending | null>(null); // imagen subida que aún no se ha guardado
   const [zones, setZones] = useState(initialZones);
   const [sketching, setSketching] = useState(false);
   const [uploadingSketch, setUploadingSketch] = useState(false);
@@ -53,13 +57,19 @@ export function PlanEditorClient({
   const runId = useRef(0);
   const legacyGrid = initialZones.length > 0; // almacenes antiguos con zonas sobre cuadrícula
 
-  async function runDetection(src: PlanSource | null) {
+  // Sala vacía con muros cuando la IA no responde: la proporción debe poder guardarse.
+  function fallbackLayout() {
+    setLayout((l) => l ?? DEFAULT_LAYOUT);
+    setAspect(clampAspect);
+  }
+
+  async function runDetection(src: PlanSource | null, pend?: Pending) {
     const id = ++runId.current;
     setDetecting(true);
     setMessage(null);
     let r: DetectResult;
     try {
-      r = await detectZonesAction(groupId, warehouseId);
+      r = await detectZonesAction(groupId, warehouseId, pend);
     } catch {
       r = { ok: false as const, reason: 'UNAVAILABLE' as const };
     }
@@ -73,20 +83,20 @@ export function PlanEditorClient({
       }
     } else {
       setMessage(AI_MESSAGES[r.reason]);
-      if (src === 'sketch') setLayout((l) => l ?? DEFAULT_LAYOUT);
+      if (src === 'sketch') fallbackLayout();
     }
   }
 
   function cancelDetection() {
     runId.current++;
     setDetecting(false);
-    if (source === 'sketch') setLayout((l) => l ?? DEFAULT_LAYOUT);
+    if (source === 'sketch') fallbackLayout();
     setMessage('Detección cancelada. Puedes dibujar las zonas a mano.');
   }
 
   async function onPlanUploaded(path: string, file: File, src: PlanSource) {
     const ratio = await imageAspect(file);
-    const r = await setPlanImage(groupId, warehouseId, path, ratio, src);
+    const r = await previewPlanImage(groupId, warehouseId, path, ratio, src);
     if ('error' in r) {
       setMessage(r.error);
       return;
@@ -95,7 +105,9 @@ export function PlanEditorClient({
     setAspect(ratio);
     setSource(src);
     setLayout(null);
-    if (src === 'sketch' || zones.length === 0) await runDetection(src);
+    const pend = { path, source: src };
+    setPending(pend);
+    if (src === 'sketch' || zones.length === 0) await runDetection(src, pend);
   }
 
   async function onSketchDone(file: File) {
@@ -122,13 +134,13 @@ export function PlanEditorClient({
 
   async function redetect() {
     if (zones.length > 0 && !confirm('Esto reemplaza las zonas actuales por las que detecte la IA. ¿Seguir?')) return;
-    await runDetection(source);
+    await runDetection(source, pending ?? undefined);
   }
 
   async function save() {
     setSaving(true);
     setMessage(null);
-    const r = await saveZones(groupId, warehouseId, zones, layout ? { layout, aspectRatio: aspect } : undefined);
+    const r = await saveZones(groupId, warehouseId, zones, pending || layout ? { layout, aspectRatio: aspect, image: pending ?? undefined } : undefined);
     setSaving(false);
     if ('error' in r) setMessage(r.error);
     else router.push(`/g/${groupId}/w/${warehouseId}`);

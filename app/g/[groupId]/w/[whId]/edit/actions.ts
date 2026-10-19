@@ -4,7 +4,7 @@ import { imageSize } from 'image-size';
 import { requireUser, getRole } from '@/lib/auth';
 import { signedUrls } from '@/lib/signed';
 import { detectZonesFromImage, type DetectResult } from '@/lib/ai/detectZones';
-import { validatePlan, type Layout, type PlanSource } from '@/lib/layout';
+import { validatePlanUpdate, type PlanUpdate, type PlanSource } from '@/lib/layout';
 import { clampZone, validateZones, type EditableZone } from '@/lib/zones';
 
 async function requireAdmin(groupId: string) {
@@ -13,7 +13,8 @@ async function requireAdmin(groupId: string) {
   return ctx;
 }
 
-export async function setPlanImage(
+// No escribe nada: la imagen y el plano solo se guardan en saveZones.
+export async function previewPlanImage(
   groupId: string,
   warehouseId: string,
   path: string,
@@ -24,44 +25,54 @@ export async function setPlanImage(
   if (!path.startsWith(`${groupId}/plans/`) || !Number.isFinite(aspectRatio) || aspectRatio <= 0 || (source !== 'sketch' && source !== 'photo')) {
     return { error: 'Foto no válida.' };
   }
-  const { error } = await supabase
-    .from('warehouses')
-    .update({ plan_image_path: path, aspect_ratio: aspectRatio, plan_source: source, layout: null })
-    .eq('id', warehouseId)
-    .eq('group_id', groupId);
-  if (error) return { error: 'No se ha podido guardar la foto del plano.' };
   const urls = await signedUrls(supabase, [path]);
   return urls[path] ? { url: urls[path] } : { error: 'No se ha podido cargar la foto.' };
 }
 
-export async function detectZonesAction(groupId: string, warehouseId: string): Promise<DetectResult> {
+export async function detectZonesAction(
+  groupId: string,
+  warehouseId: string,
+  pending?: { path: string; source: PlanSource },
+): Promise<DetectResult> {
   const { supabase } = await requireAdmin(groupId);
-  const { data: wh } = await supabase
-    .from('warehouses')
-    .select('plan_image_path, plan_source')
-    .eq('id', warehouseId)
-    .eq('group_id', groupId)
-    .single();
-  if (!wh?.plan_image_path) return { ok: false, reason: 'NO_ZONES' };
-  const { data: blob, error } = await supabase.storage.from('photos').download(wh.plan_image_path);
+  let path: string | null | undefined;
+  let source: string | null | undefined;
+  if (pending) {
+    if (!pending.path.startsWith(`${groupId}/plans/`) || (pending.source !== 'sketch' && pending.source !== 'photo')) {
+      return { ok: false, reason: 'NO_ZONES' };
+    }
+    ({ path, source } = pending);
+  } else {
+    const { data: wh } = await supabase
+      .from('warehouses')
+      .select('plan_image_path, plan_source')
+      .eq('id', warehouseId)
+      .eq('group_id', groupId)
+      .single();
+    path = wh?.plan_image_path;
+    source = wh?.plan_source;
+  }
+  if (!path) return { ok: false, reason: 'NO_ZONES' };
+  const { data: blob, error } = await supabase.storage.from('photos').download(path);
   if (error || !blob) return { ok: false, reason: 'UNAVAILABLE' };
   const buf = Buffer.from(await blob.arrayBuffer());
   const { width, height } = imageSize(buf);
   if (!width || !height) return { ok: false, reason: 'UNAVAILABLE' };
-  return detectZonesFromImage(buf.toString('base64'), { width, height }, undefined, wh.plan_source === 'sketch' ? 'sketch' : 'photo');
+  return detectZonesFromImage(buf.toString('base64'), { width, height }, undefined, source === 'sketch' ? 'sketch' : 'photo');
 }
 
 export async function saveZones(
   groupId: string,
   warehouseId: string,
   zones: EditableZone[],
-  plan?: { layout: Layout; aspectRatio: number },
+  plan?: PlanUpdate,
 ): Promise<{ ok: true } | { error: string }> {
   const invalid = validateZones(zones);
   if (invalid) return { error: invalid };
   if (plan) {
-    const badPlan = validatePlan(plan);
+    const badPlan = validatePlanUpdate(plan);
     if (badPlan) return { error: badPlan };
+    if (plan.image && !plan.image.path.startsWith(`${groupId}/plans/`)) return { error: 'Foto no válida.' };
   }
   const { supabase } = await requireAdmin(groupId);
 
@@ -81,17 +92,24 @@ export async function saveZones(
         error: `Mueve o borra el material de ${blocked.map((z) => `«${z.label}»`).join(', ')} antes de eliminar esas zonas.`,
       };
     }
-    const { error } = await supabase.from('zones').delete().in('id', ids);
-    if (error) return { error: 'No se han podido borrar las zonas.' };
   }
 
   if (plan) {
     const { error } = await supabase
       .from('warehouses')
-      .update({ layout: plan.layout, aspect_ratio: plan.aspectRatio })
+      .update({
+        layout: plan.layout,
+        aspect_ratio: plan.aspectRatio,
+        ...(plan.image ? { plan_image_path: plan.image.path, plan_source: plan.image.source } : {}),
+      })
       .eq('id', warehouseId)
       .eq('group_id', groupId);
     if (error) return { error: 'No se ha podido guardar el plano.' };
+  }
+
+  if (toDelete.length > 0) {
+    const { error } = await supabase.from('zones').delete().in('id', toDelete.map((z) => z.id));
+    if (error) return { error: 'No se han podido borrar las zonas.' };
   }
 
   const rows = zones.map(clampZone).map((z) => ({
