@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { callVisionModel } from './gemini';
+import { callVisionModel, SKETCH_PROMPT } from './gemini';
 
 function geminiResponse(text: string, status = 200) {
   return new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text }] } }] }), { status });
@@ -41,6 +41,15 @@ describe('callVisionModel (Gemini)', () => {
   it('devuelve el texto tal cual si no tiene el formato esperado', async () => {
     fetchMock.mockResolvedValue(geminiResponse('basura'));
     expect(await callVisionModel('b64')).toBe('basura');
+  });
+
+  it('en modo sketch envía el prompt y el esquema de plano y devuelve el texto sin reordenar', async () => {
+    const text = '{"room":{"box_2d":[0,0,1000,1000]},"doors":[],"corridors":[],"zones":[{"label":"","box_2d":[1,2,3,4]}]}';
+    fetchMock.mockResolvedValue(geminiResponse(text));
+    expect(await callVisionModel('b64', undefined, 'sketch')).toBe(text);
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(body.contents[0].parts[1].text).toBe(SKETCH_PROMPT);
+    expect(body.generationConfig.responseSchema.required).toContain('room');
   });
 
   it('lanza GEMINI_HTTP_<status> si la respuesta no es ok', async () => {

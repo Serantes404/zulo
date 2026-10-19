@@ -40,6 +40,35 @@ describe('detectZonesFromImage', () => {
     expect(await detectZonesFromImage('b64', img, call)).toEqual({ ok: false, reason: 'UNAVAILABLE' });
   });
 
+  const sketch = JSON.stringify({
+    room: { box_2d: [0, 0, 1000, 1000] },
+    doors: [{ wall: 'left', start: 700, end: 800 }],
+    corridors: [],
+    zones: [{ label: 'Menaje', box_2d: [0, 0, 500, 500] }],
+  });
+
+  it('en modo sketch pasa el modo a la llamada y devuelve layout y proporción', async () => {
+    const call = vi.fn().mockResolvedValue(sketch);
+    const r = await detectZonesFromImage('b64', img, call, 'sketch');
+    expect(call).toHaveBeenCalledWith('b64', expect.any(AbortSignal), 'sketch');
+    expect(r.ok && r.zones[0].label).toBe('Menaje');
+    expect(r.ok && r.layout?.doors).toEqual([{ wall: 'left', start: 0.7, end: 0.8 }]);
+    expect(r.ok && r.aspectRatio).toBe(1);
+  });
+
+  it('en modo sketch reintenta si la respuesta no sirve y acaba en NO_ZONES', async () => {
+    const call = vi.fn().mockResolvedValue('{"room":{"box_2d":[0,0,1000,1000]},"zones":[]}');
+    expect(await detectZonesFromImage('b64', img, call, 'sketch')).toEqual({ ok: false, reason: 'NO_ZONES' });
+    expect(call).toHaveBeenCalledTimes(2);
+  });
+
+  it('en modo foto no devuelve layout', async () => {
+    const call = vi.fn().mockResolvedValue(good);
+    const r = await detectZonesFromImage('b64', img, call);
+    expect(call).toHaveBeenCalledWith('b64', expect.any(AbortSignal), 'photo');
+    expect(r.ok && r.layout).toBeUndefined();
+  });
+
   it('devuelve TIMEOUT si tarda más de AI_TIMEOUT_MS', async () => {
     vi.useFakeTimers();
     const call = (_b64: string, signal?: AbortSignal) =>
