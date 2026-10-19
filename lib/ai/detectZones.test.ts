@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { detectZonesFromImage, AI_TIMEOUT_MS, MAX_PLAN_BYTES, planTooLarge } from './detectZones';
+import { detectZonesFromImage, AI_TIMEOUT_MS, MAX_PLAN_BYTES, planTooLarge, quotaFailure } from './detectZones';
 
 const img = { width: 1000, height: 1000 };
 const good = JSON.stringify({ zones: [{ label: 'Cocina', box: [0, 0, 500, 500] }] });
@@ -91,4 +91,16 @@ describe('planTooLarge', () => {
     expect(planTooLarge(Number.NaN)).toBe(false);
   });
   it('ignora Infinity (no es finito)', () => expect(planTooLarge(Number.POSITIVE_INFINITY)).toBe(false));
+});
+
+describe('quotaFailure', () => {
+  it('devuelve QUOTA si el error es AI_QUOTA', () => expect(quotaFailure('AI_QUOTA')).toBe('QUOTA'));
+  it('devuelve QUOTA si AI_QUOTA va dentro del mensaje', () =>
+    expect(quotaFailure('Error: AI_QUOTA (P0001)')).toBe('QUOTA'));
+  it('devuelve UNAVAILABLE para otros errores', () => {
+    expect(quotaFailure('FORBIDDEN')).toBe('UNAVAILABLE');
+    expect(quotaFailure('NOT_AUTHENTICATED')).toBe('UNAVAILABLE');
+    expect(quotaFailure('')).toBe('UNAVAILABLE');
+  });
+  it('devuelve UNAVAILABLE si no hay mensaje', () => expect(quotaFailure(undefined)).toBe('UNAVAILABLE'));
 });

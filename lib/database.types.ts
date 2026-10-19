@@ -39,6 +39,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_usage: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: never
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: never
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_usage_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_members: {
         Row: {
           created_at: string
@@ -354,6 +390,7 @@ export type Database = {
         }
         Returns: string
       }
+      consume_ai_quota: { Args: { p_group: string }; Returns: undefined }
       create_group: { Args: { p_name: string }; Returns: string }
       group_of_item: { Args: { i: string }; Returns: string }
       group_of_warehouse: { Args: { w: string }; Returns: string }

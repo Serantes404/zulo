@@ -19,6 +19,7 @@ const AI_MESSAGES = {
   TIMEOUT: 'La IA ha tardado demasiado. Dibuja las zonas a mano o inténtalo de nuevo.',
   UNAVAILABLE: 'La IA no está disponible ahora. Puedes dibujar las zonas a mano.',
   TOO_LARGE: 'La imagen es demasiado grande (máx. 5 MB). Prueba con una más pequeña.',
+  QUOTA: 'Has llegado al límite de detecciones con IA por hoy. Puedes dibujar las zonas a mano o volver a intentarlo mañana.',
 } as const;
 
 type Props = {

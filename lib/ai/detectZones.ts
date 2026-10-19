@@ -11,9 +11,14 @@ export function planTooLarge(bytes: number | null | undefined): boolean {
   return typeof bytes === 'number' && Number.isFinite(bytes) && bytes > MAX_PLAN_BYTES;
 }
 
+// El RPC consume_ai_quota lanza 'AI_QUOTA' al superar el límite diario.
+export function quotaFailure(message: string | undefined): 'QUOTA' | 'UNAVAILABLE' {
+  return message?.includes('AI_QUOTA') ? 'QUOTA' : 'UNAVAILABLE';
+}
+
 export type DetectResult =
   | { ok: true; zones: Zone[]; layout?: Layout; aspectRatio?: number }
-  | { ok: false; reason: 'NO_ZONES' | 'TIMEOUT' | 'UNAVAILABLE' | 'TOO_LARGE' };
+  | { ok: false; reason: 'NO_ZONES' | 'TIMEOUT' | 'UNAVAILABLE' | 'TOO_LARGE' | 'QUOTA' };
 
 export async function detectZonesFromImage(
   imageBase64: string,
