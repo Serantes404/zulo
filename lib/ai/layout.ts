@@ -36,7 +36,10 @@ const each = <T>(schema: z.ZodType<T>, list: unknown[]): T[] =>
 function overlapRatio(a: Rect, b: Rect): number {
   const ix = Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x));
   const iy = Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
-  return b.w * b.h > 0 ? (ix * iy) / (b.w * b.h) : 0;
+  const inter = ix * iy;
+  const byA = a.w * a.h > 0 ? inter / (a.w * a.h) : 0;
+  const byB = b.w * b.h > 0 ? inter / (b.w * b.h) : 0;
+  return Math.max(byA, byB);
 }
 
 /** Ajusta el ancho de una puerta a MIN_DOOR-MAX_DOOR alrededor de su centro, dentro de la pared. */

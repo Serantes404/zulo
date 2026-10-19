@@ -86,6 +86,17 @@ describe('normalizeSketch', () => {
     expect(r.layout.corridors[0].x).toBeCloseTo(0.35);
   });
 
+  it('descarta un pasillo pequeño que cae dentro de una zona grande', () => {
+    const r = normalizeSketch(
+      json({
+        zones: [{ label: 'A', box_2d: [0, 0, 1000, 800] }],
+        corridors: [{ label: 'Pasillo', box_2d: [400, 300, 600, 500] }],
+      }),
+      img,
+    )!;
+    expect(r.layout.corridors).toHaveLength(0);
+  });
+
   it('limita la proporción de la sala a 0.25-4', () => {
     expect(normalizeSketch(json({ zones: [{ label: 'A', box_2d: [0, 0, 500, 500] }] }), { width: 8000, height: 1000 })!.aspectRatio).toBe(4);
     expect(normalizeSketch(json({ zones: [{ label: 'A', box_2d: [0, 0, 500, 500] }] }), { width: 1000, height: 8000 })!.aspectRatio).toBe(0.25);
