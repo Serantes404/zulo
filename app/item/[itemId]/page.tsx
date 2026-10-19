@@ -9,6 +9,7 @@ import { conditionLabel } from '@/lib/loans';
 import { Badge } from '@/components/ui/badge';
 import { CheckoutForm } from './CheckoutForm';
 import { ItemAdminForm } from './ItemAdminForm';
+import { ReturnForm } from './ReturnForm';
 
 type Params = Promise<{ itemId: string }>;
 
@@ -91,7 +92,12 @@ async function Item({ params }: { params: Params }) {
                   <span className="text-sm">· {l.quantity} ud. · {l.purpose} · hasta {l.due_date}</span>
                   {isOverdue(l.due_date) && <Badge className="bg-red-700 text-white">Vencido</Badge>}
                 </div>
-                {/* DEVOLVER: en la Tarea 12 se inserta aquí el formulario de devolución */}
+                {(l.user_id === user.id || isAdmin) && (
+                  <details>
+                    <summary className="cursor-pointer text-sm font-medium underline">Devolver</summary>
+                    <ReturnForm loanId={l.id} groupId={groupId} />
+                  </details>
+                )}
               </li>
             ))}
           </ul>

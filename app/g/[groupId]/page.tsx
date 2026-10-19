@@ -2,6 +2,8 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireUser, getRole } from '@/lib/auth';
+import { isOverdue } from '@/lib/dates';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,6 +38,14 @@ async function GroupContent({ params }: { params: Params }) {
   ]);
   if (!group) notFound();
 
+  const { data: myLoans } = await supabase
+    .from('loans')
+    .select('id, quantity, due_date, items!inner(id, name, zones!inner(warehouses!inner(group_id)))')
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .eq('items.zones.warehouses.group_id', groupId)
+    .order('due_date');
+
   return (
     <>
       <h1 className="text-2xl font-semibold">{group.name}</h1>
@@ -65,7 +75,26 @@ async function GroupContent({ params }: { params: Params }) {
         )}
       </section>
 
-      {/* MIS_PRESTAMOS: en la Tarea 12 se inserta aquí la sección "Mis préstamos" */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-semibold">Mis préstamos</h2>
+        {myLoans && myLoans.length > 0 ? (
+          <ul className="divide-y rounded-lg border">
+            {myLoans.map((l) => (
+              <li key={l.id}>
+                <Link href={`/item/${l.items.id}`} className="flex items-center justify-between gap-2 p-3 hover:bg-muted">
+                  <span>{l.items.name} · {l.quantity} ud.</span>
+                  <span className="text-sm">
+                    hasta {l.due_date}
+                    {isOverdue(l.due_date) && <Badge className="ml-2 bg-red-700 text-white">Vencido</Badge>}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-muted-foreground">No tienes material prestado.</p>
+        )}
+      </section>
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">Miembros</h2>

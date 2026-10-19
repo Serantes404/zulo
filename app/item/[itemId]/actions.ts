@@ -2,7 +2,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireUser } from '@/lib/auth';
-import { checkoutSchema, itemSchema } from '@/lib/schemas';
+import { checkoutSchema, itemSchema, returnSchema } from '@/lib/schemas';
 import { rpcErrorMessage } from '@/lib/errors';
 import { toISODate } from '@/lib/dates';
 import { safeNext } from '@/lib/safeNext';
@@ -70,4 +70,19 @@ export async function setItemPhoto(itemId: string, path: string): Promise<Action
   if (error) return { error: 'No se ha podido guardar la foto.' };
   revalidatePath(`/item/${itemId}`);
   return { ok: true };
+}
+
+export async function returnAction(input: unknown): Promise<ActionResult> {
+  const p = returnSchema.safeParse(input);
+  if (!p.success) return { error: 'Revisa los datos del formulario.' };
+  const { loanId, photoPath, condition, notes } = p.data;
+  const { supabase } = await requireUser();
+  const { error } = await supabase.rpc('return_loan', {
+    p_loan: loanId,
+    p_photo: photoPath,
+    p_condition: condition,
+    p_notes: notes,
+  });
+  if (error) return { error: rpcErrorMessage(error.message) };
+  redirect(`/loan/${loanId}`);
 }
