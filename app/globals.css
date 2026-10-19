@@ -63,7 +63,7 @@
 }
 
 /* Sombras, duraciones y curva (valores no dependientes del tema se sobrescriben abajo en oscuro). */
-@theme {
+@theme static {
   --shadow-xs: 0 1px 0 rgb(20 22 31 / 0.06);
   --shadow-md: 0 4px 16px -4px rgb(20 22 31 / 0.12);
   --shadow-sheet: 0 -8px 32px -8px rgb(20 22 31 / 0.2);
@@ -110,7 +110,7 @@
   --signal: #ff6b35;
   --signal-ink: #c2410c;
   --plan-paper: #fafaf7;
-  --plan-grid: #ecebe4;
+  --plan-grid: #eceae4;
   --plan-ink: #1f2330;
   --plan-line: #b8b4aa;
   --plan-label: #6e6a60;
