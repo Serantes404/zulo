@@ -4,7 +4,9 @@ import { imageSize } from 'image-size';
 import { requireUser, getRole } from '@/lib/auth';
 import { signedUrls } from '@/lib/signed';
 import { detectZonesFromImage, type DetectResult } from '@/lib/ai/detectZones';
-import { validatePlanUpdate, type PlanUpdate, type PlanSource } from '@/lib/layout';
+import { validatePlanUpdate, MIN_ASPECT, MAX_ASPECT, parseStoredLayout, type PlanUpdate, type PlanSource } from '@/lib/layout';
+import { isPlanPath } from '@/lib/planPath';
+import { warehouseInGroup } from '@/lib/ownership';
 import { clampZone, validateZones, type EditableZone } from '@/lib/zones';
 
 async function requireAdmin(groupId: string) {
@@ -12,6 +14,8 @@ async function requireAdmin(groupId: string) {
   if ((await getRole(ctx.supabase, groupId, ctx.user.id)) !== 'admin') throw new Error('FORBIDDEN');
   return ctx;
 }
+
+const NO_PERMISSION = 'No tienes permiso para hacer esto.';
 
 // No escribe nada: la imagen y el plano solo se guardan en saveZones.
 export async function previewPlanImage(
@@ -22,7 +26,14 @@ export async function previewPlanImage(
   source: PlanSource,
 ): Promise<{ url: string } | { error: string }> {
   const { supabase } = await requireAdmin(groupId);
-  if (!path.startsWith(`${groupId}/plans/`) || !Number.isFinite(aspectRatio) || aspectRatio <= 0 || (source !== 'sketch' && source !== 'photo')) {
+  if (!(await warehouseInGroup(supabase, groupId, warehouseId))) return { error: NO_PERMISSION };
+  if (
+    !isPlanPath(groupId, path) ||
+    !Number.isFinite(aspectRatio) ||
+    aspectRatio < MIN_ASPECT ||
+    aspectRatio > MAX_ASPECT ||
+    (source !== 'sketch' && source !== 'photo')
+  ) {
     return { error: 'Foto no válida.' };
   }
   const urls = await signedUrls(supabase, [path]);
@@ -35,10 +46,11 @@ export async function detectZonesAction(
   pending?: { path: string; source: PlanSource },
 ): Promise<DetectResult> {
   const { supabase } = await requireAdmin(groupId);
+  if (!(await warehouseInGroup(supabase, groupId, warehouseId))) return { ok: false, reason: 'UNAVAILABLE' };
   let path: string | null | undefined;
   let source: string | null | undefined;
   if (pending) {
-    if (!pending.path.startsWith(`${groupId}/plans/`) || (pending.source !== 'sketch' && pending.source !== 'photo')) {
+    if (!isPlanPath(groupId, pending.path) || (pending.source !== 'sketch' && pending.source !== 'photo')) {
       return { ok: false, reason: 'NO_ZONES' };
     }
     ({ path, source } = pending);
@@ -72,9 +84,10 @@ export async function saveZones(
   if (plan) {
     const badPlan = validatePlanUpdate(plan);
     if (badPlan) return { error: badPlan };
-    if (plan.image && !plan.image.path.startsWith(`${groupId}/plans/`)) return { error: 'Foto no válida.' };
+    if (plan.image && !isPlanPath(groupId, plan.image.path)) return { error: 'Foto no válida.' };
   }
   const { supabase } = await requireAdmin(groupId);
+  if (!(await warehouseInGroup(supabase, groupId, warehouseId))) return { error: NO_PERMISSION };
 
   const { data: existing } = await supabase.from('zones').select('id, label').eq('warehouse_id', warehouseId);
   const existingIds = new Set((existing ?? []).map((z) => z.id));
@@ -98,7 +111,7 @@ export async function saveZones(
     const { error } = await supabase
       .from('warehouses')
       .update({
-        layout: plan.layout,
+        layout: plan.layout === null ? null : parseStoredLayout(plan.layout),
         aspect_ratio: plan.aspectRatio,
         ...(plan.image ? { plan_image_path: plan.image.path, plan_source: plan.image.source } : {}),
       })

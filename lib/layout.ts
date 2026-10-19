@@ -49,6 +49,6 @@ export function validatePlanUpdate(plan: PlanUpdate): string | null {
   if (image && image.source !== 'sketch' && image.source !== 'photo') return bad;
   if (plan.layout !== null) return validatePlan({ layout: plan.layout, aspectRatio: plan.aspectRatio });
   if (!image || image.source !== 'photo') return bad;
-  if (!Number.isFinite(plan.aspectRatio) || plan.aspectRatio <= 0) return bad;
+  if (!Number.isFinite(plan.aspectRatio) || plan.aspectRatio < MIN_ASPECT || plan.aspectRatio > MAX_ASPECT) return bad;
   return null;
 }

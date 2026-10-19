@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseStoredLayout, validatePlan, validatePlanUpdate, DEFAULT_LAYOUT } from './layout';
+import { parseStoredLayout, validatePlan, validatePlanUpdate, DEFAULT_LAYOUT, MIN_ASPECT, MAX_ASPECT } from './layout';
 
 const ok = {
   doors: [{ wall: 'left', start: 0.8, end: 0.86 }],
@@ -49,6 +49,14 @@ describe('validatePlanUpdate', () => {
     expect(validatePlanUpdate({ layout: DEFAULT_LAYOUT, aspectRatio: 9, image: sketch })).toBe(bad);
     expect(validatePlanUpdate({ layout: null, aspectRatio: 0, image: photo })).toBe(bad);
     expect(validatePlanUpdate({ layout: null, aspectRatio: Number.NaN, image: photo })).toBe(bad);
+  });
+  it('rechaza proporciones fuera de límites en una foto', () => {
+    expect(validatePlanUpdate({ layout: null, aspectRatio: 0.1, image: photo })).toBe(bad);
+    expect(validatePlanUpdate({ layout: null, aspectRatio: 1e9, image: photo })).toBe(bad);
+  });
+  it('acepta las proporciones límite en una foto', () => {
+    expect(validatePlanUpdate({ layout: null, aspectRatio: MIN_ASPECT, image: photo })).toBeNull();
+    expect(validatePlanUpdate({ layout: null, aspectRatio: MAX_ASPECT, image: photo })).toBeNull();
   });
   it('rechaza un origen desconocido', () =>
     expect(validatePlanUpdate({ layout: DEFAULT_LAYOUT, aspectRatio: 1, image: { path: 'x', source: 'otro' as never } })).toBe(bad));
