@@ -2,12 +2,12 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (@media (prefers-color-scheme: dark));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -46,75 +46,138 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --color-signal: var(--signal);
+  --color-signal-ink: var(--signal-ink);
+  --color-plan-paper: var(--plan-paper);
+  --color-plan-grid: var(--plan-grid);
+  --color-plan-ink: var(--plan-ink);
+  --color-plan-line: var(--plan-line);
+  --color-plan-label: var(--plan-label);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-ink: var(--success-ink);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+}
+
+/* Sombras, duraciones y curva (valores no dependientes del tema se sobrescriben abajo en oscuro). */
+@theme {
+  --shadow-xs: 0 1px 0 rgb(20 22 31 / 0.06);
+  --shadow-md: 0 4px 16px -4px rgb(20 22 31 / 0.12);
+  --shadow-sheet: 0 -8px 32px -8px rgb(20 22 31 / 0.2);
+  --dur-fast: 120ms;
+  --dur: 200ms;
+  --dur-slow: 320ms;
+  --ease-zulo: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --background: #f7f6f2;
+  --foreground: #14161f;
+  --card: #ffffff;
+  --card-foreground: #14161f;
+  --popover: #ffffff;
+  --popover-foreground: #14161f;
+  --primary: #2747d6;
+  --primary-foreground: #ffffff;
+  --secondary: #ecebe5;
+  --secondary-foreground: #14161f;
+  --muted: #efeee8;
+  --muted-foreground: #5b6070;
+  --accent: #e9ecfb;
+  --accent-foreground: #1e3ab8;
+  --destructive: #b91c1c;
+  --border: #dedcd5;
+  --input: #8a8f9c;
+  --ring: #2747d6;
+  --chart-1: #c2410c;
+  --chart-2: #1d4ed8;
+  --chart-3: #4d7c0f;
+  --chart-4: #eab308;
+  --chart-5: #7c3aed;
+  --radius: 0.75rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #14161f;
+  --sidebar-primary: #2747d6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e9ecfb;
+  --sidebar-accent-foreground: #1e3ab8;
+  --sidebar-border: #dedcd5;
+  --sidebar-ring: #2747d6;
+
+  --signal: #ff6b35;
+  --signal-ink: #c2410c;
+  --plan-paper: #fafaf7;
+  --plan-grid: #ecebe4;
+  --plan-ink: #1f2330;
+  --plan-line: #b8b4aa;
+  --plan-label: #6e6a60;
+  --success: #dcfce7;
+  --success-foreground: #14532d;
+  --success-ink: #15803d;
+  --warning: #fef3c7;
+  --warning-foreground: #78350f;
+  --danger: #b91c1c;
+  --danger-foreground: #ffffff;
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+/* Modo oscuro automatico segun el sistema (sin interruptor ni next-themes). */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0e1220;
+    --foreground: #e8eaf2;
+    --card: #161b2c;
+    --card-foreground: #e8eaf2;
+    --popover: #161b2c;
+    --popover-foreground: #e8eaf2;
+    --primary: #8ea6ff;
+    --primary-foreground: #0e1220;
+    --secondary: #1e2438;
+    --secondary-foreground: #e8eaf2;
+    --muted: #1e2438;
+    --muted-foreground: #9aa3b8;
+    --accent: #222b47;
+    --accent-foreground: #e8eaf2;
+    --destructive: #f87171;
+    --border: #2a3147;
+    --input: #6b7490;
+    --ring: #8ea6ff;
+    --chart-1: #fb923c;
+    --chart-2: #7da2ff;
+    --chart-3: #a3e635;
+    --chart-4: #facc15;
+    --chart-5: #c4b5fd;
+    --sidebar: #161b2c;
+    --sidebar-foreground: #e8eaf2;
+    --sidebar-primary: #8ea6ff;
+    --sidebar-primary-foreground: #0e1220;
+    --sidebar-accent: #222b47;
+    --sidebar-accent-foreground: #e8eaf2;
+    --sidebar-border: #2a3147;
+    --sidebar-ring: #8ea6ff;
+
+    --signal: #ff8a5b;
+    --signal-ink: #ff8a5b;
+    --plan-paper: #111a2e;
+    --plan-grid: #1a2540;
+    --plan-ink: #c9d3ee;
+    --plan-line: #6f7fa8;
+    --plan-label: #8c9ac0;
+    --success: #14532d;
+    --success-foreground: #bbf7d0;
+    --success-ink: #86efac;
+    --warning: #713f12;
+    --warning-foreground: #fde68a;
+    --danger: #b91c1c;
+    --danger-foreground: #ffffff;
+
+    /* En oscuro las sombras casi no se ven: borde fino en su lugar. */
+    --shadow-xs: 0 0 0 1px rgb(255 255 255 / 0.05);
+    --shadow-md: 0 0 0 1px rgb(255 255 255 / 0.05);
+    --shadow-sheet: 0 0 0 1px rgb(255 255 255 / 0.05);
+  }
 }
 
 @layer base {
@@ -126,5 +189,16 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
