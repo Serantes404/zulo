@@ -5,6 +5,7 @@ import { requireUser, getRole } from '@/lib/auth';
 import { signedUrls } from '@/lib/signed';
 import { mergeAvailability } from '@/lib/availability';
 import { PlanView } from '@/components/PlanView';
+import { DEFAULT_LAYOUT, parseStoredLayout } from '@/lib/layout';
 
 type Params = Promise<{ groupId: string; whId: string }>;
 
@@ -26,7 +27,7 @@ async function Warehouse({ params }: { params: Params }) {
 
   const { data: wh } = await supabase
     .from('warehouses')
-    .select('id, name, plan_image_path, aspect_ratio')
+    .select('id, name, plan_image_path, aspect_ratio, plan_source, layout')
     .eq('id', whId)
     .eq('group_id', groupId)
     .single();
@@ -60,6 +61,7 @@ async function Warehouse({ params }: { params: Params }) {
       ) : (
         <PlanView
           imageUrl={wh.plan_image_path ? urls[wh.plan_image_path] ?? null : null}
+          layout={wh.plan_source === 'sketch' ? parseStoredLayout(wh.layout) ?? DEFAULT_LAYOUT : null}
           aspectRatio={Number(wh.aspect_ratio)}
           zones={(zones ?? []).map((z) => ({ ...z, x: Number(z.x), y: Number(z.y), w: Number(z.w), h: Number(z.h) }))}
           items={mergeAvailability(items ?? [], avail ?? [])}
