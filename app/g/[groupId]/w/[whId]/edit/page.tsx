@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { requireUser, getRole } from '@/lib/auth';
 import { signedUrls } from '@/lib/signed';
+import { DEFAULT_LAYOUT, parseStoredLayout } from '@/lib/layout';
 import { PlanEditorClient } from './PlanEditorClient';
 
 export const maxDuration = 60;
@@ -24,7 +25,7 @@ async function EditPlan({ params }: { params: Params }) {
 
   const { data: wh } = await supabase
     .from('warehouses')
-    .select('id, name, plan_image_path, aspect_ratio')
+    .select('id, name, plan_image_path, aspect_ratio, plan_source, layout')
     .eq('id', whId)
     .eq('group_id', groupId)
     .single();
@@ -44,6 +45,8 @@ async function EditPlan({ params }: { params: Params }) {
       name={wh.name}
       imageUrl={wh.plan_image_path ? urls[wh.plan_image_path] ?? null : null}
       aspectRatio={Number(wh.aspect_ratio)}
+      planSource={wh.plan_source === 'sketch' || wh.plan_source === 'photo' ? wh.plan_source : null}
+      initialLayout={wh.plan_source === 'sketch' ? parseStoredLayout(wh.layout) ?? DEFAULT_LAYOUT : null}
       initialZones={(zones ?? []).map((z) => ({
         id: z.id,
         key: z.id,

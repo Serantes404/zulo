@@ -2,12 +2,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { Rnd } from 'react-rnd';
 import { PALETTE, clampZone, newZone, type EditableZone } from '@/lib/zones';
+import { FloorPlan } from '@/components/FloorPlan';
+import type { Layout } from '@/lib/layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 type Props = {
   imageUrl: string | null;
+  layout: Layout | null;
   aspectRatio: number;
   zones: EditableZone[];
   onChange: (zones: EditableZone[]) => void;
@@ -16,7 +19,7 @@ type Props = {
 const GRID =
   'linear-gradient(to right, #e5e7eb 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)';
 
-export function ZoneEditor({ imageUrl, aspectRatio, zones, onChange }: Props) {
+export function ZoneEditor({ imageUrl, layout, aspectRatio, zones, onChange }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
@@ -50,10 +53,13 @@ export function ZoneEditor({ imageUrl, aspectRatio, zones, onChange }: Props) {
         className="relative w-full touch-none overflow-hidden rounded-lg border"
         style={{
           height,
-          backgroundImage: imageUrl ? `url("${imageUrl}")` : GRID,
-          backgroundSize: imageUrl ? '100% 100%' : '24px 24px',
+          backgroundImage: layout ? undefined : imageUrl ? `url("${imageUrl}")` : GRID,
+          backgroundSize: layout ? undefined : imageUrl ? '100% 100%' : '24px 24px',
         }}
       >
+        {layout && (
+          <FloorPlan aspectRatio={aspectRatio} layout={layout} className="pointer-events-none absolute inset-0 h-full w-full" />
+        )}
         {width > 0 &&
           zones.map((z) => (
             <Rnd

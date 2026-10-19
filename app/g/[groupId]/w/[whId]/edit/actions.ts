@@ -4,6 +4,7 @@ import { imageSize } from 'image-size';
 import { requireUser, getRole } from '@/lib/auth';
 import { signedUrls } from '@/lib/signed';
 import { detectZonesFromImage, type DetectResult } from '@/lib/ai/detectZones';
+import { validatePlan, type Layout, type PlanSource } from '@/lib/layout';
 import { clampZone, validateZones, type EditableZone } from '@/lib/zones';
 
 async function requireAdmin(groupId: string) {
@@ -17,14 +18,15 @@ export async function setPlanImage(
   warehouseId: string,
   path: string,
   aspectRatio: number,
+  source: PlanSource,
 ): Promise<{ url: string } | { error: string }> {
   const { supabase } = await requireAdmin(groupId);
-  if (!path.startsWith(`${groupId}/plans/`) || !Number.isFinite(aspectRatio) || aspectRatio <= 0) {
+  if (!path.startsWith(`${groupId}/plans/`) || !Number.isFinite(aspectRatio) || aspectRatio <= 0 || (source !== 'sketch' && source !== 'photo')) {
     return { error: 'Foto no válida.' };
   }
   const { error } = await supabase
     .from('warehouses')
-    .update({ plan_image_path: path, aspect_ratio: aspectRatio })
+    .update({ plan_image_path: path, aspect_ratio: aspectRatio, plan_source: source, layout: null })
     .eq('id', warehouseId)
     .eq('group_id', groupId);
   if (error) return { error: 'No se ha podido guardar la foto del plano.' };
@@ -36,7 +38,7 @@ export async function detectZonesAction(groupId: string, warehouseId: string): P
   const { supabase } = await requireAdmin(groupId);
   const { data: wh } = await supabase
     .from('warehouses')
-    .select('plan_image_path')
+    .select('plan_image_path, plan_source')
     .eq('id', warehouseId)
     .eq('group_id', groupId)
     .single();
@@ -46,16 +48,21 @@ export async function detectZonesAction(groupId: string, warehouseId: string): P
   const buf = Buffer.from(await blob.arrayBuffer());
   const { width, height } = imageSize(buf);
   if (!width || !height) return { ok: false, reason: 'UNAVAILABLE' };
-  return detectZonesFromImage(buf.toString('base64'), { width, height });
+  return detectZonesFromImage(buf.toString('base64'), { width, height }, undefined, wh.plan_source === 'sketch' ? 'sketch' : 'photo');
 }
 
 export async function saveZones(
   groupId: string,
   warehouseId: string,
   zones: EditableZone[],
+  plan?: { layout: Layout; aspectRatio: number },
 ): Promise<{ ok: true } | { error: string }> {
   const invalid = validateZones(zones);
   if (invalid) return { error: invalid };
+  if (plan) {
+    const badPlan = validatePlan(plan);
+    if (badPlan) return { error: badPlan };
+  }
   const { supabase } = await requireAdmin(groupId);
 
   const { data: existing } = await supabase.from('zones').select('id, label').eq('warehouse_id', warehouseId);
@@ -76,6 +83,15 @@ export async function saveZones(
     }
     const { error } = await supabase.from('zones').delete().in('id', ids);
     if (error) return { error: 'No se han podido borrar las zonas.' };
+  }
+
+  if (plan) {
+    const { error } = await supabase
+      .from('warehouses')
+      .update({ layout: plan.layout, aspect_ratio: plan.aspectRatio })
+      .eq('id', warehouseId)
+      .eq('group_id', groupId);
+    if (error) return { error: 'No se ha podido guardar el plano.' };
   }
 
   const rows = zones.map(clampZone).map((z) => ({
