@@ -5,10 +5,15 @@ import { parseAiContent } from './schema';
 import type { Layout } from '@/lib/layout';
 
 export const AI_TIMEOUT_MS = 55_000;
+export const MAX_PLAN_BYTES = 5 * 1024 * 1024;
+
+export function planTooLarge(bytes: number | null | undefined): boolean {
+  return typeof bytes === 'number' && Number.isFinite(bytes) && bytes > MAX_PLAN_BYTES;
+}
 
 export type DetectResult =
   | { ok: true; zones: Zone[]; layout?: Layout; aspectRatio?: number }
-  | { ok: false; reason: 'NO_ZONES' | 'TIMEOUT' | 'UNAVAILABLE' };
+  | { ok: false; reason: 'NO_ZONES' | 'TIMEOUT' | 'UNAVAILABLE' | 'TOO_LARGE' };
 
 export async function detectZonesFromImage(
   imageBase64: string,

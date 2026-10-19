@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { detectZonesFromImage, AI_TIMEOUT_MS } from './detectZones';
+import { detectZonesFromImage, AI_TIMEOUT_MS, MAX_PLAN_BYTES, planTooLarge } from './detectZones';
 
 const img = { width: 1000, height: 1000 };
 const good = JSON.stringify({ zones: [{ label: 'Cocina', box: [0, 0, 500, 500] }] });
@@ -77,4 +77,18 @@ describe('detectZonesFromImage', () => {
     await vi.advanceTimersByTimeAsync(AI_TIMEOUT_MS);
     expect(await p).toEqual({ ok: false, reason: 'TIMEOUT' });
   });
+});
+
+describe('planTooLarge', () => {
+  it('acepta hasta el límite', () => {
+    expect(planTooLarge(0)).toBe(false);
+    expect(planTooLarge(MAX_PLAN_BYTES)).toBe(false);
+  });
+  it('rechaza por encima del límite', () => expect(planTooLarge(MAX_PLAN_BYTES + 1)).toBe(true));
+  it('no rechaza si el tamaño es desconocido o no es un número finito', () => {
+    expect(planTooLarge(null)).toBe(false);
+    expect(planTooLarge(undefined)).toBe(false);
+    expect(planTooLarge(Number.NaN)).toBe(false);
+  });
+  it('ignora Infinity (no es finito)', () => expect(planTooLarge(Number.POSITIVE_INFINITY)).toBe(false));
 });

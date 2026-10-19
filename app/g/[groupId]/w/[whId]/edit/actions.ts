@@ -3,7 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { imageSize } from 'image-size';
 import { requireUser, getRole } from '@/lib/auth';
 import { signedUrls } from '@/lib/signed';
-import { detectZonesFromImage, type DetectResult } from '@/lib/ai/detectZones';
+import { detectZonesFromImage, planTooLarge, type DetectResult } from '@/lib/ai/detectZones';
 import { validatePlanUpdate, MIN_ASPECT, MAX_ASPECT, parseStoredLayout, type PlanUpdate, type PlanSource } from '@/lib/layout';
 import { isPlanPath } from '@/lib/planPath';
 import { warehouseInGroup } from '@/lib/ownership';
@@ -65,8 +65,16 @@ export async function detectZonesAction(
     source = wh?.plan_source;
   }
   if (!path) return { ok: false, reason: 'NO_ZONES' };
+  // Tamaño del objeto antes de descargarlo (el bucket no tiene límite propio).
+  const slash = path.lastIndexOf('/');
+  const { data: found } = await supabase.storage
+    .from('photos')
+    .list(path.slice(0, slash), { search: path.slice(slash + 1), limit: 1 });
+  const stored = found?.find((f) => f.name === path.slice(slash + 1));
+  if (planTooLarge(stored?.metadata?.size)) return { ok: false, reason: 'TOO_LARGE' };
   const { data: blob, error } = await supabase.storage.from('photos').download(path);
   if (error || !blob) return { ok: false, reason: 'UNAVAILABLE' };
+  if (planTooLarge(blob.size)) return { ok: false, reason: 'TOO_LARGE' };
   const buf = Buffer.from(await blob.arrayBuffer());
   const { width, height } = imageSize(buf);
   if (!width || !height) return { ok: false, reason: 'UNAVAILABLE' };

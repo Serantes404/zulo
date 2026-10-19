@@ -18,6 +18,7 @@ const AI_MESSAGES = {
   NO_ZONES: 'No he podido detectar zonas, dibújalas tú.',
   TIMEOUT: 'La IA ha tardado demasiado. Dibuja las zonas a mano o inténtalo de nuevo.',
   UNAVAILABLE: 'La IA no está disponible ahora. Puedes dibujar las zonas a mano.',
+  TOO_LARGE: 'La imagen es demasiado grande (máx. 5 MB). Prueba con una más pequeña.',
 } as const;
 
 type Props = {
