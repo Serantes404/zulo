@@ -242,24 +242,30 @@ export type Database = {
           created_at: string
           group_id: string
           id: string
+          layout: Json | null
           name: string
           plan_image_path: string | null
+          plan_source: string | null
         }
         Insert: {
           aspect_ratio?: number
           created_at?: string
           group_id: string
           id?: string
+          layout?: Json | null
           name: string
           plan_image_path?: string | null
+          plan_source?: string | null
         }
         Update: {
           aspect_ratio?: number
           created_at?: string
           group_id?: string
           id?: string
+          layout?: Json | null
           name?: string
           plan_image_path?: string | null
+          plan_source?: string | null
         }
         Relationships: [
           {
