@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { defaultDueDate, toISODate, isOverdue, todayInMadrid } from './dates';
+import { defaultDueDate, toISODate, isOverdue, todayInMadrid, isRealISODate, maxDueDate } from './dates';
 
 describe('dates', () => {
   it('toISODate rellena con ceros', () => expect(toISODate(new Date(2026, 0, 5))).toBe('2026-01-05'));
@@ -47,4 +47,19 @@ describe('dates', () => {
       expect(isOverdue('2026-10-21', now)).toBe(false);
     });
   });
+});
+
+describe('isRealISODate', () => {
+  it('acepta fechas reales, también el 29 de febrero bisiesto', () => {
+    expect(isRealISODate('2026-10-20')).toBe(true);
+    expect(isRealISODate('2028-02-29')).toBe(true);
+  });
+  it('rechaza fechas que no existen o mal formadas', () => {
+    for (const s of ['2026-02-31', '2026-02-29', '2026-13-01', '2026-00-10', '2026-10-00', '2026-1-5', '20261020', ''])
+      expect(isRealISODate(s)).toBe(false);
+  });
+});
+
+describe('maxDueDate', () => {
+  it('es hoy en Madrid + 365 días', () => expect(maxDueDate(new Date('2026-10-20T22:30:00Z'))).toBe('2027-10-21'));
 });

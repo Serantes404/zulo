@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/toaster';
 import { clampQuantity } from '@/lib/quantity';
-import { defaultDueDate, todayInMadrid } from '@/lib/dates';
+import { defaultDueDate, todayInMadrid, maxDueDate } from '@/lib/dates';
 import { checkoutAction } from './actions';
 
 type Props = { itemId: string; groupId: string; available: number; onDone: () => void };
@@ -79,7 +79,7 @@ export function CheckoutForm({ itemId, groupId, available, onDone }: Props) {
           </div>
           <div className="space-y-1">
             <Label htmlFor="co-due">Devolver antes del</Label>
-            <Input id="co-due" type="date" required min={todayInMadrid()} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+            <Input id="co-due" type="date" required min={todayInMadrid()} max={maxDueDate()} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
           </div>
         </section>
         <FormError id="co-error">{error}</FormError>

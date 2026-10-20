@@ -6,9 +6,21 @@ const MESSAGES: Record<string, string> = {
   NOT_AUTHENTICATED: 'Tu sesión ha caducado. Vuelve a entrar.',
   INVALID_INVITE: 'Este link no es válido o ha caducado.',
   NOT_FOUND: 'No se ha encontrado.',
+  BAD_PHOTO: 'La foto no es válida. Vuelve a hacerla.',
+  QUANTITY_BELOW_LENT: 'No puedes bajar el total por debajo de las unidades prestadas.',
+  GROUP_LIMIT: 'Has llegado al máximo de grupos que puedes crear.',
+  WAREHOUSE_LIMIT: 'Este grupo ha llegado al máximo de almacenes.',
+  ITEM_LIMIT: 'Este grupo ha llegado al máximo de material.',
 };
+
+export const NO_PERMISSION = MESSAGES.FORBIDDEN;
+export const BAD_PHOTO = MESSAGES.BAD_PHOTO;
 
 export function rpcErrorMessage(message: string | undefined): string {
   const code = Object.keys(MESSAGES).find((k) => message?.includes(k));
   return code ? MESSAGES[code] : 'Algo ha fallado. Inténtalo de nuevo.';
+}
+
+export function quantityBelowLentMessage(lent: number): string {
+  return `No puedes bajar el total por debajo de las unidades prestadas (${lent}).`;
 }
