@@ -42,19 +42,19 @@ export type Database = {
       ai_usage: {
         Row: {
           created_at: string
-          group_id: string
+          group_id: string | null
           id: number
           user_id: string
         }
         Insert: {
           created_at?: string
-          group_id: string
+          group_id?: string | null
           id?: never
           user_id: string
         }
         Update: {
           created_at?: string
-          group_id?: string
+          group_id?: string | null
           id?: never
           user_id?: string
         }
@@ -392,6 +392,7 @@ export type Database = {
       }
       consume_ai_quota: { Args: { p_group: string }; Returns: undefined }
       create_group: { Args: { p_name: string }; Returns: string }
+      delete_group: { Args: { p_group: string; p_name: string }; Returns: undefined }
       group_of_item: { Args: { i: string }; Returns: string }
       group_of_warehouse: { Args: { w: string }; Returns: string }
       group_of_zone: { Args: { z: string }; Returns: string }

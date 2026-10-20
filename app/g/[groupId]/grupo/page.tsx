@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { regenerateInvite } from '../actions';
 import { InviteLink } from '../InviteLink';
 import { MemberMenu } from '../MemberMenu';
+import { DeleteGroup } from '../DeleteGroup';
 
 type Params = Promise<{ groupId: string }>;
 
@@ -94,6 +95,8 @@ async function GroupMembersContent({ params }: { params: Params }) {
           <InviteLink code={group.invite_code} groupName={group.name} onRegenerate={regenerateInvite.bind(null, groupId)} />
         </section>
       )}
+
+      {isAdmin && <DeleteGroup groupId={groupId} groupName={group.name} />}
     </>
   );
 }

@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { getRole, requireUser } from '@/lib/auth';
 import { NO_PERMISSION, rpcErrorMessage } from '@/lib/errors';
+import { removeGroupPhotos } from '@/lib/groupPhotos';
 import { isUuid } from '@/lib/schemas';
 import { deleteWarehouseError } from '@/lib/warehouseDelete';
 import { parseWarehouseName } from '@/lib/warehouseName';
@@ -85,6 +86,22 @@ export async function removeMember(groupId: string, userId: string): Promise<Rem
   revalidatePath(`/g/${groupId}/grupo`);
   revalidatePath(`/g/${groupId}/prestamos`);
   return inviteError ? { ok: true, inviteWarning: true } : { ok: true };
+}
+
+// Elimina el grupo entero. Primero se comprueba todo, luego las fotos (hace falta ser admin para
+// borrarlas) y al final delete_group, que vuelve a comprobar admin y nombre en la base de datos.
+export async function deleteGroup(groupId: string, confirmName: string): Promise<{ error: string }> {
+  if (!isUuid(groupId)) return { error: NO_PERMISSION };
+  const { supabase, user } = await requireUser();
+  if ((await getRole(supabase, groupId, user.id)) !== 'admin') return { error: NO_PERMISSION };
+  const { data: group } = await supabase.from('groups').select('name').eq('id', groupId).single();
+  if (!group) return { error: NO_PERMISSION };
+  if (confirmName.trim() !== group.name) return { error: rpcErrorMessage('NAME_MISMATCH') };
+  if (!(await removeGroupPhotos(supabase, groupId))) return { error: 'No se han podido borrar las fotos. Inténtalo de nuevo.' };
+  const { error } = await supabase.rpc('delete_group', { p_group: groupId, p_name: confirmName });
+  if (error) return { error: rpcErrorMessage(error.message, 'No se ha podido eliminar el grupo.') };
+  revalidatePath('/', 'layout');
+  redirect('/');
 }
 
 export async function renameWarehouse(

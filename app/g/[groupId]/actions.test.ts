@@ -22,16 +22,21 @@ vi.mock('@/lib/auth', () => ({
   getRole: vi.fn(async (_sb: unknown, _g: string, uid: string) => (uid === ME ? role : targetRole)),
 }));
 
-const { createWarehouse, makeAdmin, removeMember } = await import('./actions');
+let photosOk = true;
+vi.mock('@/lib/groupPhotos', () => ({ removeGroupPhotos: vi.fn(async () => photosOk) }));
+
+const { createWarehouse, deleteGroup, makeAdmin, removeMember } = await import('./actions');
 
 const respond = (call: Call): Result => {
   if (call.table === 'warehouses' && call.op === 'insert') return { data: { id: WH } };
+  if (call.table === 'groups' && call.op === 'select') return { data: { name: 'Scouts' } };
   if (call.table === 'group_members' && call.op === 'delete') return { data: [{ user_id: U }] };
   if (call.table === 'group_members' && call.op === 'update') return { data: [{ user_id: U }] };
   return {};
 };
 
 beforeEach(() => {
+  photosOk = true;
   role = 'admin';
   targetRole = 'member';
   db = fakeSupabase(respond);
@@ -146,5 +151,35 @@ describe('removeMember', () => {
   it('si falla regenerar el link, informa con inviteWarning', async () => {
     db = fakeSupabase((c) => (c.op === 'rpc' ? { error: { message: 'x' } } : respond(c)));
     expect(await removeMember(G, U)).toEqual({ ok: true, inviteWarning: true });
+  });
+});
+
+describe('deleteGroup', () => {
+  const rpcs = () => db.calls.filter((c) => c.op === 'rpc');
+  it('un admin con el nombre correcto borra fotos y grupo y vuelve a la portada', async () => {
+    await expect(deleteGroup(G, ' Scouts ')).rejects.toThrow('REDIRECT:/');
+    expect(rpcs()).toMatchObject([{ rpc: 'delete_group', payload: { p_group: G, p_name: ' Scouts ' } }]);
+  });
+  it('un miembro no admin recibe error sin borrar nada', async () => {
+    role = 'member';
+    expect(await deleteGroup(G, 'Scouts')).toEqual({ error: NO_PERMISSION });
+    expect(rpcs()).toEqual([]);
+  });
+  it('con otro nombre no borra', async () => {
+    expect(await deleteGroup(G, 'scouts')).toEqual({ error: 'El nombre no coincide con el del grupo.' });
+    expect(rpcs()).toEqual([]);
+  });
+  it("groupId='x' devuelve error sin consultar", async () => {
+    expect(await deleteGroup('x', 'Scouts')).toEqual({ error: NO_PERMISSION });
+    expect(db.calls).toEqual([]);
+  });
+  it('si fallan las fotos no borra el grupo', async () => {
+    photosOk = false;
+    expect(await deleteGroup(G, 'Scouts')).toHaveProperty('error');
+    expect(rpcs()).toEqual([]);
+  });
+  it('si la base de datos lo rechaza devuelve su mensaje', async () => {
+    db = fakeSupabase((c) => (c.op === 'rpc' ? { error: { message: 'FORBIDDEN' } } : respond(c)));
+    expect(await deleteGroup(G, 'Scouts')).toEqual({ error: NO_PERMISSION });
   });
 });
