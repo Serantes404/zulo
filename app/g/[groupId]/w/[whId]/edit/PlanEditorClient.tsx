@@ -27,6 +27,7 @@ import { fromDetected, newZone, type EditableZone } from '@/lib/zones';
 import { DEFAULT_LAYOUT, MAX_ASPECT, MIN_ASPECT, type Layout, type PlanSource } from '@/lib/layout';
 import { EDITOR_STEPS, editorStep, stepState, type EditorStep } from '@/lib/planEditorSteps';
 import type { DetectResult } from '@/lib/ai/detectZones';
+import { AI_MESSAGES } from '@/lib/aiMessages';
 import { detectZonesAction, previewPlanImage, saveZones } from './actions';
 
 type Pending = { path: string; source: PlanSource };
@@ -34,13 +35,6 @@ type AiReason = keyof typeof AI_MESSAGES;
 type Confirm = 'redraw' | 'redetect' | 'exit' | 'discard';
 const clampAspect = (a: number) => Math.min(MAX_ASPECT, Math.max(MIN_ASPECT, a));
 
-const AI_MESSAGES = {
-  NO_ZONES: 'No he podido detectar zonas, dibújalas tú.',
-  TIMEOUT: 'La IA ha tardado demasiado. Dibuja las zonas a mano o inténtalo de nuevo.',
-  UNAVAILABLE: 'La IA no está disponible ahora. Puedes dibujar las zonas a mano.',
-  TOO_LARGE: 'La imagen es demasiado grande (máx. 5 MB). Prueba con una más pequeña.',
-  QUOTA: 'Has llegado al límite de detecciones con IA por hoy. Puedes dibujar las zonas a mano o volver a intentarlo mañana.',
-} as const;
 // Reintentar no sirve con una imagen demasiado grande ni sin cuota.
 const RETRYABLE: AiReason[] = ['NO_ZONES', 'TIMEOUT', 'UNAVAILABLE'];
 

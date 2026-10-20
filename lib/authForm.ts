@@ -24,8 +24,9 @@ export function parseCredentials(formData: FormData): ParsedCredentials {
 
 const MESSAGES: Record<string, string> = {
   invalid_credentials: 'Email o contraseña incorrectos.',
-  user_already_exists: 'Ya hay una cuenta con ese email. Entra con tu contraseña.',
-  email_exists: 'Ya hay una cuenta con ese email. Entra con tu contraseña.',
+  // Neutro a propósito: no confirma si un email tiene cuenta (enumeración de usuarios).
+  user_already_exists: 'No se ha podido crear la cuenta. Si ya tienes una, entra con tu contraseña.',
+  email_exists: 'No se ha podido crear la cuenta. Si ya tienes una, entra con tu contraseña.',
   weak_password: 'Esa contraseña es demasiado débil. Prueba con una más larga.',
   over_request_rate_limit: 'Demasiados intentos. Espera unos minutos.',
   email_not_confirmed: 'Tienes que confirmar tu email antes de entrar.',

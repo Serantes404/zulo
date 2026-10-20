@@ -31,9 +31,10 @@ describe('parseCredentials', () => {
 describe('authErrorMessage', () => {
   it('credenciales incorrectas', () =>
     expect(authErrorMessage('invalid_credentials')).toBe('Email o contraseña incorrectos.'));
-  it('usuario ya existente', () => {
-    expect(authErrorMessage('user_already_exists')).toBe('Ya hay una cuenta con ese email. Entra con tu contraseña.');
-    expect(authErrorMessage('email_exists')).toBe('Ya hay una cuenta con ese email. Entra con tu contraseña.');
+  it('usuario ya existente: mensaje neutro que no confirma que la cuenta existe', () => {
+    const neutral = 'No se ha podido crear la cuenta. Si ya tienes una, entra con tu contraseña.';
+    expect(authErrorMessage('user_already_exists')).toBe(neutral);
+    expect(authErrorMessage('email_exists')).toBe(neutral);
   });
   it('contraseña débil', () =>
     expect(authErrorMessage('weak_password')).toBe('Esa contraseña es demasiado débil. Prueba con una más larga.'));
