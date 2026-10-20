@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { ListSkeleton } from '@/components/skeletons';
 import Link from 'next/link';
 import { requireUser } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ export default function Home() {
     <main className="mx-auto max-w-lg space-y-6 p-4">
       <h1 className="text-2xl font-semibold">Mis grupos</h1>
       {/* Con Cache Components, la sesión solo se lee dentro de un <Suspense>. */}
-      <Suspense fallback={<p className="text-muted-foreground">Cargando…</p>}>
+      <Suspense fallback={<ListSkeleton />}>
         <MyGroups />
       </Suspense>
       <form action={createGroup} className="space-y-2">

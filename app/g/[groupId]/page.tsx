@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { GroupSkeleton } from '@/components/skeletons';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireUser, getRole } from '@/lib/auth';
@@ -17,7 +18,7 @@ export default function GroupPage({ params }: { params: Params }) {
   return (
     <main className="mx-auto max-w-lg space-y-8 p-4">
       {/* Con Cache Components, params y la sesión solo se leen dentro de un <Suspense>. */}
-      <Suspense fallback={<p className="text-muted-foreground">Cargando…</p>}>
+      <Suspense fallback={<GroupSkeleton />}>
         <GroupContent params={params} />
       </Suspense>
     </main>

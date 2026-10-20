@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { DetailSkeleton } from '@/components/skeletons';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireUser, getRole } from '@/lib/auth';
@@ -16,7 +17,7 @@ type Params = Promise<{ itemId: string }>;
 export default function ItemPage({ params }: { params: Params }) {
   return (
     // Con Cache Components, params y la sesión solo se leen dentro de un <Suspense>.
-    <Suspense fallback={<p className="p-4 text-muted-foreground">Cargando…</p>}>
+    <Suspense fallback={<DetailSkeleton />}>
       <Item params={params} />
     </Suspense>
   );
