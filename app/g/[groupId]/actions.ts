@@ -2,24 +2,31 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { getRole, requireUser } from '@/lib/auth';
-import { NO_PERMISSION } from '@/lib/errors';
+import { NO_PERMISSION, rpcErrorMessage } from '@/lib/errors';
 import { isUuid } from '@/lib/schemas';
 import { deleteWarehouseError } from '@/lib/warehouseDelete';
 import { parseWarehouseName } from '@/lib/warehouseName';
 
-export async function createWarehouse(groupId: string, formData: FormData) {
+export type CreateWarehouseState = { error: string } | null;
+
+// Con useActionState: los errores (permiso, WAREHOUSE_LIMIT) se muestran en el diálogo. Si va bien, redirige al editor.
+export async function createWarehouse(
+  groupId: string,
+  _prev: CreateWarehouseState,
+  formData: FormData,
+): Promise<CreateWarehouseState> {
   const name = parseWarehouseName(formData);
-  if (!name) return;
-  if (!isUuid(groupId)) throw new Error(NO_PERMISSION);
+  if (!name) return { error: 'Escribe un nombre.' };
+  if (!isUuid(groupId)) return { error: NO_PERMISSION };
   const { supabase, user } = await requireUser();
   // Defensa en profundidad: RLS ya lo impide, pero no nos fiamos solo de ello.
-  if ((await getRole(supabase, groupId, user.id)) !== 'admin') throw new Error(NO_PERMISSION);
+  if ((await getRole(supabase, groupId, user.id)) !== 'admin') return { error: NO_PERMISSION };
   const { data, error } = await supabase
     .from('warehouses')
     .insert({ group_id: groupId, name })
     .select('id')
     .single();
-  if (error || !data) throw new Error('No se ha podido crear el almacén');
+  if (error || !data) return { error: rpcErrorMessage(error?.message, 'No se ha podido crear el almacén.') };
   redirect(`/g/${groupId}/w/${data.id}/edit`);
 }
 

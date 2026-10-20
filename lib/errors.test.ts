@@ -15,8 +15,13 @@ describe('códigos de la migración de seguridad', () => {
   it('quantityBelowLentMessage con número', () =>
     expect(quantityBelowLentMessage(3)).toBe('No puedes bajar el total por debajo de las unidades prestadas (3).'));
   it('límites de grupos, almacenes y material', () => {
-    expect(rpcErrorMessage('GROUP_LIMIT')).toMatch(/grupos/);
-    expect(rpcErrorMessage('WAREHOUSE_LIMIT')).toMatch(/almacenes/);
-    expect(rpcErrorMessage('ITEM_LIMIT')).toMatch(/material/);
+    expect(rpcErrorMessage('GROUP_LIMIT')).toBe('Has llegado al máximo de 5 grupos creados.');
+    expect(rpcErrorMessage('WAREHOUSE_LIMIT')).toBe('Este grupo ya tiene el máximo de 20 almacenes.');
+    expect(rpcErrorMessage('ITEM_LIMIT')).toBe('Este grupo ya tiene el máximo de 2000 materiales.');
   });
+});
+
+it('rpcErrorMessage acepta un mensaje genérico propio', () => {
+  expect(rpcErrorMessage('boom', 'No se ha podido crear el grupo.')).toBe('No se ha podido crear el grupo.');
+  expect(rpcErrorMessage('GROUP_LIMIT', 'x')).toBe('Has llegado al máximo de 5 grupos creados.');
 });

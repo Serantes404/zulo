@@ -43,16 +43,24 @@ const writes = () => db.calls.filter((c) => c.op !== 'select');
 
 describe('createWarehouse', () => {
   it('un admin crea el almacén y va al editor', async () => {
-    await expect(createWarehouse(G, nameForm('Local'))).rejects.toThrow(`REDIRECT:/g/${G}/w/${WH}/edit`);
+    await expect(createWarehouse(G, null, nameForm('Local'))).rejects.toThrow(`REDIRECT:/g/${G}/w/${WH}/edit`);
     expect(writes()).toMatchObject([{ table: 'warehouses', op: 'insert', payload: { group_id: G, name: 'Local' } }]);
   });
-  it('un miembro no admin no inserta', async () => {
+  it('un miembro no admin recibe error y no inserta', async () => {
     role = 'member';
-    await expect(createWarehouse(G, nameForm('Local'))).rejects.toThrow(NO_PERMISSION);
+    expect(await createWarehouse(G, null, nameForm('Local'))).toEqual({ error: NO_PERMISSION });
     expect(writes()).toEqual([]);
   });
-  it("groupId='x' falla sin consultar", async () => {
-    await expect(createWarehouse('x', nameForm('Local'))).rejects.toThrow(NO_PERMISSION);
+  it("groupId='x' devuelve error sin consultar", async () => {
+    expect(await createWarehouse('x', null, nameForm('Local'))).toEqual({ error: NO_PERMISSION });
+    expect(db.calls).toEqual([]);
+  });
+  it('WAREHOUSE_LIMIT devuelve el mensaje del límite', async () => {
+    db = fakeSupabase((c) => (c.op === 'insert' ? { error: { message: 'WAREHOUSE_LIMIT' } } : respond(c)));
+    expect(await createWarehouse(G, null, nameForm('Local'))).toEqual({ error: 'Este grupo ya tiene el máximo de 20 almacenes.' });
+  });
+  it('sin nombre devuelve error', async () => {
+    expect(await createWarehouse(G, null, nameForm(' '))).toHaveProperty('error');
     expect(db.calls).toEqual([]);
   });
 });

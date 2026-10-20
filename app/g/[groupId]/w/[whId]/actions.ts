@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { requireUser } from '@/lib/auth';
 import { zoneInWarehouse } from '@/lib/ownership';
 import { itemSchema } from '@/lib/schemas';
+import { rpcErrorMessage } from '@/lib/errors';
 
 export type CreateItemResult = { ok: true } | { error: string };
 
@@ -19,7 +20,7 @@ export async function createItem(groupId: string, warehouseId: string, zoneId: s
   const { error } = await supabase
     .from('items')
     .insert({ zone_id: zoneId, name: p.data.name, quantity_total: p.data.quantity, notes: p.data.notes ?? null });
-  if (error) return { error: 'No se ha podido añadir el material. Inténtalo de nuevo.' };
+  if (error) return { error: rpcErrorMessage(error.message, 'No se ha podido añadir el material. Inténtalo de nuevo.') };
   revalidatePath(`/g/${groupId}/w/${warehouseId}`);
   return { ok: true };
 }

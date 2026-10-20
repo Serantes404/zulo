@@ -6,11 +6,9 @@ import { ChevronRight, Plus, UsersRound } from 'lucide-react';
 import { requireUser } from '@/lib/auth';
 import { initials } from '@/lib/nav';
 import { EmptyState } from '@/components/EmptyState';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { buttonVariants } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { createGroup } from './actions';
+import { CreateGroupForm } from './CreateGroupForm';
 
 // Colores de la paleta de zonas (decorativos), elegidos por hash del id del grupo.
 const AVATAR_TINTS = [
@@ -38,25 +36,6 @@ export default function Home() {
         <MyGroups />
       </Suspense>
     </main>
-  );
-}
-
-function CreateGroupForm({ hasGroups }: { hasGroups: boolean }) {
-  return (
-    <section id="crear" aria-labelledby="crear-title" className="scroll-mt-20 space-y-3">
-      {hasGroups && (
-        <div className="flex items-center gap-3 text-sm text-muted-foreground" aria-hidden="true">
-          <span className="h-px flex-1 bg-border" />o<span className="h-px flex-1 bg-border" />
-        </div>
-      )}
-      <form action={createGroup} className="space-y-2">
-        <Label htmlFor="name" id="crear-title">Crear un grupo nuevo</Label>
-        <div className="flex gap-2">
-          <Input id="name" name="name" required maxLength={80} placeholder="Scouts Seeonee" className="h-11" />
-          <Button type="submit" size="lg" className="h-11 px-5">Crear</Button>
-        </div>
-      </form>
-    </section>
   );
 }
 
