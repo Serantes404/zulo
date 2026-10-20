@@ -3,7 +3,8 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { Unlink, Users } from 'lucide-react';
 import { requireUser } from '@/lib/auth';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
+import { SubmitButton } from '@/components/SubmitButton';
 import { EmptyState } from '@/components/EmptyState';
 import { Logo } from '@/components/Logo';
 import { joinGroup } from './actions';
@@ -59,7 +60,7 @@ async function JoinForm({ params, searchParams }: Props) {
         <h1 className="text-2xl font-semibold tracking-tight">Te han invitado a un grupo</h1>
         <p className="text-sm text-muted-foreground">Podrás ver el almacén y coger material.</p>
       </div>
-      <Button type="submit" size="lg" className="w-full">Unirme al grupo</Button>
+      <SubmitButton pendingText="Uniéndome…" className="w-full">Unirme al grupo</SubmitButton>
     </form>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { unstable_rethrow, useRouter } from 'next/navigation';
 import { Minus, Plus } from 'lucide-react';
 import { PhotoCapture } from '@/components/PhotoCapture';
 import { FormError } from '@/components/FormError';
@@ -35,16 +35,23 @@ export function CheckoutForm({ itemId, groupId, available, onDone }: Props) {
     }
     setPending(true);
     setError(null);
-    const r = await checkoutAction({ itemId, quantity: qtyNum, purpose, dueDate, photoPath });
-    setPending(false);
-    if ('error' in r) {
-      setError(r.error);
+    try {
+      const r = await checkoutAction({ itemId, quantity: qtyNum, purpose, dueDate, photoPath });
+      if ('error' in r) {
+        setError(r.error);
+        router.refresh();
+        return;
+      }
+      toast({ title: 'Préstamo registrado' });
       router.refresh();
-      return;
+      onDone();
+    } catch (err) {
+      unstable_rethrow(err);
+      console.error('checkout', err);
+      setError('No se ha podido completar la operación. Inténtalo de nuevo.');
+    } finally {
+      setPending(false);
     }
-    toast({ title: 'Préstamo registrado' });
-    router.refresh();
-    onDone();
   }
 
   return (

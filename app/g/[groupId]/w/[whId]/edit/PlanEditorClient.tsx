@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useId, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { unstable_rethrow, useRouter } from 'next/navigation';
 import { Camera, Check, LayoutGrid, Loader2, Plus, RefreshCw, Sparkles, TriangleAlert, X } from 'lucide-react';
 import { cn } from 'cn';
 import { ZoneDetails, ZoneEditor } from '@/components/ZoneEditor';
@@ -23,6 +23,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/components/ui/toaster';
 import { imageAspect, uploadPhoto } from '@/lib/photos';
+import { isLeavingNavigation } from '@/lib/leaveGuard';
 import { uploadErrorMessage } from '@/lib/uploadErrors';
 import { fromDetected, newZone, type EditableZone } from '@/lib/zones';
 import { DEFAULT_LAYOUT, MAX_ASPECT, MIN_ASPECT, type Layout, type PlanSource } from '@/lib/layout';
@@ -33,7 +34,8 @@ import { detectZonesAction, previewPlanImage, saveZones } from './actions';
 
 type Pending = { path: string; source: PlanSource };
 type AiReason = keyof typeof AI_MESSAGES;
-type Confirm = 'redraw' | 'redetect' | 'exit' | 'discard';
+type Confirm = 'redraw' | 'redetect' | 'exit' | 'discard' | 'leave';
+const GENERIC_ERROR = 'No se ha podido completar la operación. Inténtalo de nuevo.';
 const clampAspect = (a: number) => Math.min(MAX_ASPECT, Math.max(MIN_ASPECT, a));
 
 // Reintentar no sirve con una imagen demasiado grande ni sin cuota.
@@ -54,6 +56,11 @@ const CONFIRMS: Record<Confirm, { title: string; body: string; action: string }>
     title: '¿Descartar el boceto?',
     body: 'Lo dibujado en el lienzo se pierde. No se puede deshacer.',
     action: 'Descartar boceto',
+  },
+  leave: {
+    title: '¿Descartar cambios?',
+    body: 'Los cambios del plano se pierden. No se puede deshacer.',
+    action: 'Descartar cambios',
   },
   exit: {
     title: '¿Salir sin guardar?',
@@ -110,6 +117,7 @@ export function PlanEditorClient({
   const [confirm, setConfirm] = useState<Confirm | null>(null);
   const runId = useRef(0);
   const sketchRef = useRef<SketchPadHandle>(null);
+  const leaveHref = useRef<string | null>(null);
 
   // `manual`: zonas a mano sin imagen ni boceto (alternativa de teclado al lienzo, WCAG 2.1.1).
   // Se guarda como los almacenes antiguos sobre cuadrícula: saveZones sin `plan`, solo zonas.
@@ -119,6 +127,31 @@ export function PlanEditorClient({
   const dirty = pending !== null || zones !== initialZones || (sketching && !sketchEmpty);
   const sel = zones.find((z) => z.key === selected);
   const elapsed = Math.max(0, Math.round((now - detectStartedAt) / 1000));
+
+  // Cambios sin guardar: avisa al recargar/cerrar y al pulsar enlaces de fuera del editor (cabecera, atrás).
+  useEffect(() => {
+    if (!dirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    const onClick = (e: MouseEvent) => {
+      const a = e.target instanceof Element ? e.target.closest('a[href]') : null;
+      if (!(a instanceof HTMLAnchorElement)) return;
+      const loc = { origin: location.origin, pathname: location.pathname, search: location.search };
+      if (!isLeavingNavigation({ href: a.href, target: a.target, download: a.hasAttribute('download') }, e, loc)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      leaveHref.current = a.pathname + a.search + a.hash;
+      setConfirm('leave');
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    document.addEventListener('click', onClick, true);
+    return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      document.removeEventListener('click', onClick, true);
+    };
+  }, [dirty]);
 
   // Contador para la variante sin movimiento ("Detectando… 3 s").
   useEffect(() => {
@@ -170,20 +203,27 @@ export function PlanEditorClient({
   }
 
   async function onPlanUploaded(path: string, file: File, src: PlanSource) {
-    const ratio = await imageAspect(file);
-    const r = await previewPlanImage(groupId, warehouseId, path, ratio, src);
-    if ('error' in r) {
-      setError(r.error);
-      return;
+    try {
+      const ratio = await imageAspect(file);
+      const r = await previewPlanImage(groupId, warehouseId, path, ratio, src);
+      if ('error' in r) {
+        setError(r.error);
+        return;
+      }
+      setImageUrl(r.url);
+      setAspect(ratio);
+      setSource(src);
+      setLayout(null);
+      setSketching(false);
+      const pend = { path, source: src };
+      setPending(pend);
+      if (src === 'sketch' || zones.length === 0) await runDetection(src, pend);
+    } catch (err) {
+      unstable_rethrow(err);
+      console.error('onPlanUploaded', err);
+      setDetecting(false);
+      setError(GENERIC_ERROR);
     }
-    setImageUrl(r.url);
-    setAspect(ratio);
-    setSource(src);
-    setLayout(null);
-    setSketching(false);
-    const pend = { path, source: src };
-    setPending(pend);
-    if (src === 'sketch' || zones.length === 0) await runDetection(src, pend);
   }
 
   async function onSketchDone(file: File) {
@@ -219,7 +259,11 @@ export function PlanEditorClient({
   }
 
   function onConfirm(kind: Confirm) {
-    if (kind === 'redraw') setSketching(true);
+    if (kind === 'leave') {
+      const href = leaveHref.current;
+      leaveHref.current = null;
+      if (href) router.push(href);
+    } else if (kind === 'redraw') setSketching(true);
     else if (kind === 'discard') startManual();
     else if (kind === 'redetect') void runDetection(source, pending ?? undefined);
     else router.push(`/g/${groupId}/w/${warehouseId}`);
@@ -254,14 +298,21 @@ export function PlanEditorClient({
   async function save() {
     setSaving(true);
     setError(null);
-    const r = await saveZones(groupId, warehouseId, zones, pending || layout ? { layout, aspectRatio: aspect, image: pending ?? undefined } : undefined);
-    if ('error' in r) {
+    try {
+      const r = await saveZones(groupId, warehouseId, zones, pending || layout ? { layout, aspectRatio: aspect, image: pending ?? undefined } : undefined);
+      if ('error' in r) {
+        setError(r.error);
+        return;
+      }
+      toast({ title: 'Plano guardado' });
+      router.push(`/g/${groupId}/w/${warehouseId}`);
+    } catch (err) {
+      unstable_rethrow(err);
+      console.error('saveZones', err);
+      setError(GENERIC_ERROR);
+    } finally {
       setSaving(false);
-      setError(r.error);
-      return;
     }
-    toast({ title: 'Plano guardado' });
-    router.push(`/g/${groupId}/w/${warehouseId}`);
   }
 
   const zoneCount = `${zones.length} ${zones.length === 1 ? 'zona' : 'zonas'}`;

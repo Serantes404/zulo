@@ -4,7 +4,7 @@ import { requireUser } from '@/lib/auth';
 import { safeNext } from '@/lib/safeNext';
 import { ArrowRight } from 'lucide-react';
 import { Logo } from '@/components/Logo';
-import { Button } from '@/components/ui/button';
+import { SubmitButton } from '@/components/SubmitButton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { saveName } from './actions';
@@ -47,10 +47,10 @@ async function WelcomeContent({ searchParams }: { searchParams: SearchParams }) 
           <Label htmlFor="full_name">Tu nombre</Label>
           <Input id="full_name" name="full_name" required maxLength={80} defaultValue={currentName} autoComplete="name" aria-describedby="full_name-hint" placeholder="Mowgli" />
         </div>
-        <Button type="submit" size="lg" className="w-full">
+        <SubmitButton pendingText="Guardando…" className="w-full">
           Continuar
           <ArrowRight aria-hidden="true" />
-        </Button>
+        </SubmitButton>
       </form>
     </>
   );

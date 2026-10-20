@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { unstable_rethrow, useRouter } from 'next/navigation';
 import { Check, CircleDashed, TriangleAlert, type LucideIcon } from 'lucide-react';
 import { PhotoCapture } from '@/components/PhotoCapture';
 import { FormError } from '@/components/FormError';
@@ -44,15 +44,22 @@ export function ReturnForm({ loanId, groupId, beforeUrl, beforeDate }: Props) {
     }
     setPending(true);
     setError(null);
-    const r = await returnAction({ loanId, photoPath, condition, notes });
-    if ('error' in r) {
+    try {
+      const r = await returnAction({ loanId, photoPath, condition, notes });
+      if ('error' in r) {
+        setPending(false);
+        setError(r.error);
+        router.refresh();
+        return;
+      }
+      toast({ title: 'Devuelto' });
+      router.push(`/loan/${loanId}`); // pending sigue activo hasta que se navega
+    } catch (err) {
       setPending(false);
-      setError(r.error);
-      router.refresh();
-      return;
+      unstable_rethrow(err);
+      console.error('return', err);
+      setError('No se ha podido completar la operación. Inténtalo de nuevo.');
     }
-    toast({ title: 'Devuelto' });
-    router.push(`/loan/${loanId}`);
   }
 
   return (
