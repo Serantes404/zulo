@@ -10,7 +10,7 @@ import { useToast } from '@/components/ui/toaster';
 
 const noSubscribe = () => () => {};
 
-export function InviteLink({ code, groupName, onRegenerate }: { code: string; groupName: string; onRegenerate: () => Promise<void> }) {
+export function InviteLink({ code, groupName, onRegenerate }: { code: string; groupName: string; onRegenerate: () => Promise<{ ok: true } | { error: string }> }) {
   const toast = useToast();
   const [pending, startTransition] = useTransition();
   // El origin y navigator.share solo existen en el navegador; en el servidor se renderizan vacíos.
@@ -38,8 +38,9 @@ export function InviteLink({ code, groupName, onRegenerate }: { code: string; gr
   function regenerate() {
     startTransition(async () => {
       try {
-        await onRegenerate();
-        toast({ title: 'Link nuevo creado', description: 'El anterior ya no funciona.' });
+        const r = await onRegenerate();
+        if ('error' in r) toast({ title: 'No se ha podido crear el link', description: r.error, variant: 'error' });
+        else toast({ title: 'Link nuevo creado', description: 'El anterior ya no funciona.' });
       } catch {
         toast({ title: 'No se ha podido crear el link', variant: 'error' });
       }

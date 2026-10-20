@@ -53,7 +53,7 @@ async function GroupContent({ params }: { params: Params }) {
   const zoneIds = (warehouses ?? []).flatMap((w) => w.zones.map((z) => z.id));
   const [{ data: avail }, { data: myLoans }] = await Promise.all([
     zoneIds.length > 0
-      ? supabase.from('item_availability').select('zone_id, quantity_out').in('zone_id', zoneIds)
+      ? supabase.from('item_availability').select('zone_id, quantity_out').in('zone_id', zoneIds).gt('quantity_out', 0)
       : Promise.resolve({ data: [] as { zone_id: string | null; quantity_out: number | null }[] }),
     supabase
       .from('loans')

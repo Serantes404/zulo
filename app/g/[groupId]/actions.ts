@@ -18,10 +18,12 @@ export async function createWarehouse(groupId: string, formData: FormData) {
   redirect(`/g/${groupId}/w/${data.id}/edit`);
 }
 
-export async function regenerateInvite(groupId: string) {
+export async function regenerateInvite(groupId: string): Promise<{ ok: true } | { error: string }> {
   const { supabase } = await requireUser();
-  await supabase.rpc('regenerate_invite', { p_group: groupId });
+  const { error } = await supabase.rpc('regenerate_invite', { p_group: groupId });
+  if (error) return { error: 'No se ha podido crear el link nuevo.' };
   revalidatePath(`/g/${groupId}`);
+  return { ok: true };
 }
 
 export async function makeAdmin(groupId: string, userId: string): Promise<{ ok: true } | { error: string }> {
