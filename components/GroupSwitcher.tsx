@@ -16,7 +16,7 @@ import {
 export type SwitcherGroup = { id: string; name: string };
 
 const triggerClass =
-  'inline-flex h-11 min-w-0 max-w-[12rem] items-center gap-1.5 rounded-md px-2 text-sm font-medium md:h-10 md:max-w-[16rem] hover:bg-muted';
+  'outline-none focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background inline-flex h-11 min-w-0 max-w-[12rem] items-center gap-1.5 rounded-md px-2 text-sm font-medium md:h-10 md:max-w-[16rem] hover:bg-muted';
 
 export function GroupSwitcher({ groups }: { groups: SwitcherGroup[] }) {
   const { groupId } = useParams<{ groupId?: string }>();

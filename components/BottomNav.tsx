@@ -2,17 +2,9 @@
 
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
-import { HandCoins, Search, Users, Warehouse, type LucideIcon } from 'lucide-react';
 import { cn } from 'cn';
-import { isTabActive, tabHref, type TabKey } from '@/lib/nav';
-
-/** Definición única de las pestañas, compartida con la cabecera de escritorio. */
-export const TABS: { key: TabKey; label: string; icon: LucideIcon }[] = [
-  { key: 'almacenes', label: 'Almacenes', icon: Warehouse },
-  { key: 'buscar', label: 'Buscar', icon: Search },
-  { key: 'prestamos', label: 'Préstamos', icon: HandCoins },
-  { key: 'grupo', label: 'Grupo', icon: Users },
-];
+import { isTabActive, tabHref } from '@/lib/nav';
+import { TABS } from '@/components/nav-tabs';
 
 export function BottomNav() {
   const { groupId } = useParams<{ groupId?: string }>();
@@ -32,7 +24,7 @@ export function BottomNav() {
                 href={tabHref(key, groupId, pathname)}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'relative flex h-full min-h-14 min-w-16 flex-col items-center justify-center gap-0.5 text-xs font-medium outline-none transition-colors duration-(--dur-fast) ease-(--ease-zulo) focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-ring',
+                  'relative flex h-full min-h-14 min-w-16 flex-col items-center justify-center gap-0.5 text-xs font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-colors duration-(--dur-fast) ease-(--ease-zulo)',
                   active ? 'text-foreground' : 'text-muted-foreground',
                 )}
               >

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
 import { cn } from 'cn';
 import { isTabActive, tabHref } from '@/lib/nav';
-import { TABS } from '@/components/BottomNav';
+import { TABS } from '@/components/nav-tabs';
 
 /** Pestañas de escritorio (≥ md) dentro de la cabecera; solo bajo /g/[groupId]. */
 export function HeaderTabs() {

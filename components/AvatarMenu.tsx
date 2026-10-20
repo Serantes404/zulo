@@ -1,5 +1,6 @@
 'use client';
 
+import { startTransition } from 'react';
 import Link from 'next/link';
 import {
   DropdownMenu,
@@ -37,9 +38,8 @@ export function AvatarMenu({
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem render={<Link href="/welcome" />}>Cambiar nombre</DropdownMenuItem>
-        <form action={signOutAction}>
-          <DropdownMenuItem render={<button type="submit" className="w-full text-left" />}>Salir</DropdownMenuItem>
-        </form>
+        {/* Se llama a la acción directamente: un <form> dentro del popup se desmontaría al cerrarse el menú. */}
+        <DropdownMenuItem onClick={() => startTransition(() => signOutAction())}>Salir</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

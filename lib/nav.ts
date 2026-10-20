@@ -2,8 +2,10 @@ export type TabKey = 'almacenes' | 'buscar' | 'prestamos' | 'grupo';
 
 /** Id del almacén si la ruta es /g/[groupId]/w/[whId]… */
 function warehousePath(groupId: string, pathname: string): string | null {
-  const m = pathname.match(new RegExp(`^/g/${groupId}/w/([^/]+)`));
-  return m ? `/g/${groupId}/w/${m[1]}` : null;
+  const prefix = `/g/${groupId}/w/`;
+  if (!pathname.startsWith(prefix)) return null;
+  const whId = pathname.slice(prefix.length).split('/')[0];
+  return whId ? `${prefix}${whId}` : null;
 }
 
 export function tabHref(key: TabKey, groupId: string, pathname: string): string {

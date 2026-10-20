@@ -17,6 +17,14 @@ describe('tabHref', () => {
   });
 });
 
+describe('groupId con caracteres especiales', () => {
+  it('no lanza con metacaracteres de regex', () => {
+    expect(() => tabHref('buscar', '(', '/g/(/w/w1')).not.toThrow();
+    expect(tabHref('buscar', '(', '/g/(/w/w1')).toBe('/g/(/w/w1#buscar');
+    expect(tabHref('buscar', 'a.b', '/g/aXb/w/w1')).toBe('/g/a.b');
+  });
+});
+
 describe('isTabActive', () => {
   it('Almacenes en el grupo y en sus almacenes', () => {
     expect(isTabActive('almacenes', 'g1', '/g/g1')).toBe(true);
