@@ -33,7 +33,7 @@ begin
     values (v_w, 'A', '#2E86AB', 0, 0, .5, .5) returning id into v_z;
   insert into public.items (zone_id, name, quantity_total) values (v_z, 'Item', 2) returning id into v_i;
   -- El admin sí puede subir el plano.
-  insert into storage.objects (bucket_id, name) values ('photos', v_g::text || '/plans/p.jpg');
+  insert into storage.objects (bucket_id, name) values ('photos', v_g::text || '/plans/' || gen_random_uuid()::text || '.jpg');
 
   begin
     delete from public.zones where id = v_z;
@@ -53,14 +53,14 @@ begin
   perform public.join_group(v_code);
 
   begin
-    insert into storage.objects (bucket_id, name) values ('photos', v_g::text || '/plans/x.jpg');
+    insert into storage.objects (bucket_id, name) values ('photos', v_g::text || '/plans/' || gen_random_uuid()::text || '.jpg');
     raise exception 'FALLO: member sube plano';
   exception when others then
     if sqlerrm not like 'new row violates row-level security policy%' then raise; end if;
   end;
 
   -- Un member sí puede subir fotos de préstamos.
-  insert into storage.objects (bucket_id, name) values ('photos', v_g::text || '/loans/x.jpg');
+  insert into storage.objects (bucket_id, name) values ('photos', v_g::text || '/loans/' || gen_random_uuid()::text || '.jpg');
 
   if (select count(*) from public.profiles) <> 2 then
     raise exception 'FALLO: Beto debería ver 2 perfiles';
@@ -76,16 +76,16 @@ begin
   -- Un member no puede editar material: el update no afecta a ninguna fila (se comprueba al final).
   update public.items set name = 'hack' where id = v_i;
 
-  v_l := public.checkout_item(v_i, 1, 'x', current_date - 1, 'p');
+  v_l := public.checkout_item(v_i, 1, 'x', current_date - 1, v_g::text || '/loans/' || gen_random_uuid()::text || '.jpg');
 
   if not (select has_overdue from public.item_availability where item_id = v_i) then
     raise exception 'FALLO: debería estar vencido';
   end if;
 
-  perform public.return_loan(v_l, 'p2', 'damaged', '  ');
+  perform public.return_loan(v_l, v_g::text || '/loans/' || gen_random_uuid()::text || '.jpg', 'damaged', '  ');
 
   begin
-    perform public.return_loan(v_l, 'p2', 'ok', '');
+    perform public.return_loan(v_l, v_g::text || '/loans/' || gen_random_uuid()::text || '.jpg', 'ok', '');
     raise exception 'FALLO: devolver dos veces el mismo préstamo';
   exception when others then
     if sqlerrm <> 'ALREADY_RETURNED' then raise; end if;
@@ -163,7 +163,7 @@ begin
   end;
 
   -- "Vencido" usa la fecha de Madrid: un préstamo que vence hoy en Madrid no está vencido.
-  v_l := public.checkout_item(v_i, 1, 'x', (now() at time zone 'Europe/Madrid')::date, 'p');
+  v_l := public.checkout_item(v_i, 1, 'x', (now() at time zone 'Europe/Madrid')::date, v_g::text || '/loans/' || gen_random_uuid()::text || '.jpg');
   if (select has_overdue from public.item_availability where item_id = v_i) then
     raise exception 'FALLO: vencer hoy (Madrid) no debería contar como vencido';
   end if;
@@ -183,7 +183,7 @@ begin
   end if;
 
   begin
-    perform public.checkout_item(v_i, 1, 'x', current_date, 'p');
+    perform public.checkout_item(v_i, 1, 'x', current_date, v_g::text || '/loans/' || gen_random_uuid()::text || '.jpg');
     raise exception 'FALLO: Carla coge material de otro grupo';
   exception when others then
     if sqlerrm <> 'FORBIDDEN' then raise; end if;

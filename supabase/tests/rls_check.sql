@@ -28,14 +28,14 @@ begin
   insert into public.zones (warehouse_id, label, color, x, y, w, h)
     values (v_w, 'Tiendas', '#2E86AB', 0, 0, 0.5, 0.5) returning id into v_z;
   insert into public.items (zone_id, name, quantity_total) values (v_z, 'Tienda Quechua', 3) returning id into v_i;
-  v_loan := public.checkout_item(v_i, 2, 'Campamento', current_date + 7, 'x/loans/a.jpg');
+  v_loan := public.checkout_item(v_i, 2, 'Campamento', current_date + 7, v_g::text || '/loans/' || gen_random_uuid()::text || '.jpg');
 
   if (select quantity_available from public.item_availability where item_id = v_i) <> 1 then
     raise exception 'FALLO: debería quedar 1 disponible';
   end if;
 
   begin
-    perform public.checkout_item(v_i, 2, 'Excursión', current_date + 7, 'x/loans/b.jpg');
+    perform public.checkout_item(v_i, 2, 'Excursión', current_date + 7, v_g::text || '/loans/' || gen_random_uuid()::text || '.jpg');
     raise exception 'FALLO: coger más de lo disponible debería fallar';
   exception when others then
     if sqlerrm <> 'NOT_ENOUGH_AVAILABLE' then raise; end if;
@@ -75,14 +75,14 @@ begin
   end;
 
   begin
-    perform public.return_loan(v_loan, 'x/loans/r.jpg', 'ok', '');
+    perform public.return_loan(v_loan, v_g::text || '/loans/' || gen_random_uuid()::text || '.jpg', 'ok', '');
     raise exception 'FALLO: Beto no debería poder devolver el préstamo de Ana';
   exception when others then
     if sqlerrm <> 'FORBIDDEN' then raise; end if;
   end;
 
   -- Un member sí puede coger lo que queda disponible.
-  perform public.checkout_item(v_i, 1, 'Reunión', current_date + 1, 'x/loans/c.jpg');
+  perform public.checkout_item(v_i, 1, 'Reunión', current_date + 1, v_g::text || '/loans/' || gen_random_uuid()::text || '.jpg');
 
   reset role;
   -- Siempre termina en excepción para que no quede nada guardado.
