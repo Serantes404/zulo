@@ -6,6 +6,10 @@ import { checkoutSchema, itemSchema, returnSchema } from '@/lib/schemas';
 import { rpcErrorMessage } from '@/lib/errors';
 import { todayInMadrid } from '@/lib/dates';
 import { safeNext } from '@/lib/safeNext';
+import { fetchHistory, type HistoryRow } from '@/lib/itemHistory';
+import { z } from 'zod';
+
+export type { HistoryRow };
 
 export type ActionResult = { ok: true } | { error: string };
 
@@ -83,5 +87,13 @@ export async function returnAction(input: unknown): Promise<ActionResult> {
     p_notes: notes,
   });
   if (error) return { error: rpcErrorMessage(error.message) };
-  redirect(`/loan/${loanId}`);
+  revalidatePath(`/loan/${loanId}`);
+  return { ok: true };
+}
+
+export async function loadHistoryAction(itemId: string, offset: number) {
+  const p = z.object({ itemId: z.string().uuid(), offset: z.number().int().min(0).max(100000) }).safeParse({ itemId, offset });
+  if (!p.success) return { error: 'No se ha podido cargar el historial.' } as const;
+  const { supabase } = await requireUser();
+  return fetchHistory(supabase, p.data.itemId, p.data.offset);
 }

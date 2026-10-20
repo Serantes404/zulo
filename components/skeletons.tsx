@@ -61,7 +61,7 @@ export function GroupSkeleton() {
 /** Fichas de material y de préstamo: título, líneas de texto y un bloque. */
 export function DetailSkeleton() {
   return (
-    <main className="mx-auto max-w-lg p-4">
+    <main className="mx-auto max-w-3xl p-4">
       <Busy className="space-y-4">
         <Skeleton className="h-4 w-1/3" />
         <Skeleton className="h-8 w-2/3" />

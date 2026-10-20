@@ -32,6 +32,7 @@ async function JoinForm({ params, searchParams }: Props) {
     return (
       <div role="alert">
         <EmptyState
+          as="h1"
           icon={Unlink}
           title="Link no válido"
           description="Este link no es válido o ha caducado. Pide uno nuevo a un admin del grupo."

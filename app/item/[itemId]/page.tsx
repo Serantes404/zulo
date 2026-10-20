@@ -2,15 +2,20 @@ import { Suspense } from 'react';
 import { DetailSkeleton } from '@/components/skeletons';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ChevronLeft, Check, Clock, PackageOpen } from 'lucide-react';
 import { requireUser, getRole } from '@/lib/auth';
 import { signedUrls } from '@/lib/signed';
-import { availabilityLabel } from '@/lib/availability';
 import { isOverdue } from '@/lib/dates';
-import { conditionLabel } from '@/lib/loans';
+import { fetchHistory } from '@/lib/itemHistory';
+import { formatShortDate, madridShortDate, outSummary, soonestDue } from '@/lib/loanSummary';
+import { initials } from '@/lib/nav';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { CheckoutForm } from './CheckoutForm';
+import { ZoneChip } from '@/components/ZoneChip';
+import { HistoryList } from './HistoryList';
 import { ItemAdminForm } from './ItemAdminForm';
-import { ReturnForm } from './ReturnForm';
+import { ReturnButton } from './ReturnButton';
+import { TakeBar } from './TakeBar';
 
 type Params = Promise<{ itemId: string }>;
 
@@ -23,13 +28,15 @@ export default function ItemPage({ params }: { params: Params }) {
   );
 }
 
+const sectionTitle = 'text-xs font-semibold tracking-wide text-muted-foreground uppercase';
+
 async function Item({ params }: { params: Params }) {
   const { itemId } = await params;
   const { supabase, user } = await requireUser();
 
   const { data: item } = await supabase
     .from('items')
-    .select('id, name, quantity_total, notes, photo_path, zones(id, label, warehouses(id, name, group_id))')
+    .select('id, name, quantity_total, notes, photo_path, zones(id, label, color, warehouses(id, name, group_id))')
     .eq('id', itemId)
     .maybeSingle();
   const zone = item?.zones;
@@ -41,87 +48,116 @@ async function Item({ params }: { params: Params }) {
   if (!role) notFound();
   const isAdmin = role === 'admin';
 
-  const [{ data: avail }, { data: active }, { data: history }] = await Promise.all([
+  const [{ data: avail }, { data: active }, history] = await Promise.all([
     supabase.from('item_availability').select('quantity_available').eq('item_id', itemId).maybeSingle(),
     supabase
       .from('loans')
-      .select('id, quantity, purpose, due_date, user_id, profiles(full_name)')
+      .select('id, quantity, purpose, due_date, user_id, checked_out_at, checkout_photo_path, profiles(full_name)')
       .eq('item_id', itemId)
       .eq('status', 'active')
       .order('due_date'),
-    supabase
-      .from('loans')
-      .select('id, quantity, returned_at, return_condition, profiles(full_name)')
-      .eq('item_id', itemId)
-      .eq('status', 'returned')
-      .order('returned_at', { ascending: false })
-      .limit(10),
+    fetchHistory(supabase, itemId, 0),
   ]);
+  const loans = active ?? [];
   const available = avail?.quantity_available ?? item.quantity_total;
-  const urls = await signedUrls(supabase, item.photo_path ? [item.photo_path] : []);
+  const unitsOut = loans.reduce((n, l) => n + l.quantity, 0);
+  const due = soonestDue(loans);
+
+  const canReturn = (l: { user_id: string }) => l.user_id === user.id || isAdmin;
+  const photoPaths = [
+    ...(item.photo_path ? [item.photo_path] : []),
+    ...loans.filter(canReturn).map((l) => l.checkout_photo_path),
+  ];
+  const urls = await signedUrls(supabase, photoPaths);
   const photoUrl = item.photo_path ? urls[item.photo_path] ?? null : null;
   const backTo = `/g/${groupId}/w/${wh.id}`;
 
   return (
-    <main className="mx-auto max-w-lg space-y-6 p-4">
-      <Link href={backTo} className="text-sm underline">← {wh.name} · {zone.label}</Link>
+    <main className="mx-auto max-w-3xl space-y-6 p-4 pb-32">
+      <Link href={backTo} className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold tracking-wide uppercase outline-none focus-visible:ring-3 focus-visible:ring-ring">
+        <ChevronLeft aria-hidden="true" className="size-5" />
+        {zone.label}
+      </Link>
 
-      <div className="space-y-1">
-        <h1 className="text-2xl font-semibold">{item.name}</h1>
-        <p>{availabilityLabel({ available, quantity_total: item.quantity_total })}</p>
-        {item.notes && <p className="whitespace-pre-line text-sm text-muted-foreground">{item.notes}</p>}
+      <div className="space-y-6 md:grid md:grid-cols-2 md:gap-6 md:space-y-0">
+        <div className="aspect-[4/3] overflow-hidden rounded-lg border bg-muted">
+          {photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={photoUrl} alt={`Foto de ${item.name}`} className="size-full object-cover" />
+          ) : (
+            <div className="flex size-full items-center justify-center">
+              <PackageOpen aria-hidden="true" className="size-16 text-muted-foreground" />
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <h1 className="text-2xl font-semibold">{item.name}</h1>
+            <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <ZoneChip label={zone.label} color={zone.color} />
+              <span>{wh.name}</span>
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-lg border p-3">
+              <p className="flex items-center gap-1.5 text-lg font-semibold">
+                <Check aria-hidden="true" className="size-5 text-success-ink" />
+                {available} de {item.quantity_total}
+              </p>
+              <p className={sectionTitle}>Disponibles</p>
+            </div>
+            <div className="rounded-lg border p-3">
+              <p className="flex items-center gap-1.5 text-lg leading-tight font-semibold">
+                <Clock aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
+                {outSummary(unitsOut, due)}
+              </p>
+              <p className={sectionTitle}>Prestadas</p>
+            </div>
+          </div>
+          {item.notes && <p className="text-sm whitespace-pre-line"><span className="font-medium">Notas:</span> {item.notes}</p>}
+        </div>
       </div>
-      {photoUrl && <img src={photoUrl} alt={`Foto de ${item.name}`} className="max-h-64 rounded-lg border" />}
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Coger material</h2>
-        {available > 0 ? (
-          <CheckoutForm itemId={item.id} groupId={groupId} available={available} />
-        ) : (
-          <p className="text-muted-foreground">No quedan unidades disponibles.</p>
-        )}
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Prestado ahora</h2>
-        {active && active.length > 0 ? (
+      <section className="space-y-2" aria-labelledby="active-title">
+        <h2 id="active-title" className={sectionTitle}>Préstamos activos</h2>
+        {loans.length > 0 ? (
           <ul className="divide-y rounded-lg border">
-            {active.map((l) => (
-              <li key={l.id} className="space-y-2 p-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium">{l.profiles?.full_name ?? 'Alguien'}</span>
-                  <span className="text-sm">· {l.quantity} ud. · {l.purpose} · hasta {l.due_date}</span>
-                  {isOverdue(l.due_date) && <Badge className="bg-red-700 text-white">Vencido</Badge>}
+            {loans.map((l) => (
+              <li key={l.id} className="flex flex-wrap items-center gap-3 p-2">
+                <Avatar><AvatarFallback>{initials(l.profiles?.full_name, null)}</AvatarFallback></Avatar>
+                <div className="min-w-0 flex-1 text-sm">
+                  <p className="truncate">
+                    <span className="font-medium">{l.profiles?.full_name ?? 'Alguien'}</span> ×{l.quantity}
+                  </p>
+                  <p className="truncate text-muted-foreground">{l.purpose} · {formatShortDate(l.due_date)}</p>
                 </div>
-                {(l.user_id === user.id || isAdmin) && (
-                  <details>
-                    <summary className="cursor-pointer text-sm font-medium underline">Devolver</summary>
-                    <ReturnForm loanId={l.id} groupId={groupId} />
-                  </details>
+                {isOverdue(l.due_date) && (
+                  <Badge variant="danger"><Clock aria-hidden="true" />Vencido</Badge>
+                )}
+                {canReturn(l) && (
+                  <ReturnButton
+                    loanId={l.id}
+                    groupId={groupId}
+                    itemName={item.name}
+                    beforeUrl={urls[l.checkout_photo_path] ?? null}
+                    beforeDate={madridShortDate(l.checked_out_at)}
+                  />
                 )}
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-muted-foreground">Nadie tiene este material ahora mismo.</p>
+          <p className="text-sm text-muted-foreground">Nadie tiene este material ahora mismo.</p>
         )}
       </section>
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Últimas devoluciones</h2>
-        {history && history.length > 0 ? (
-          <ul className="divide-y rounded-lg border">
-            {history.map((l) => (
-              <li key={l.id}>
-                <Link href={`/loan/${l.id}`} className="block p-3 text-sm hover:bg-muted">
-                  {l.profiles?.full_name ?? 'Alguien'} · {l.quantity} ud. · {conditionLabel(l.return_condition)} ·{' '}
-                  {l.returned_at ? new Date(l.returned_at).toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid' }) : ''}
-                </Link>
-              </li>
-            ))}
-          </ul>
+      <section className="space-y-2" aria-labelledby="history-title">
+        <h2 id="history-title" className={sectionTitle}>Historial</h2>
+        {'error' in history ? (
+          <p role="alert" className="text-sm text-destructive">{history.error}</p>
         ) : (
-          <p className="text-muted-foreground">Todavía no hay devoluciones.</p>
+          <HistoryList itemId={item.id} initialRows={history.rows} initialHasMore={history.hasMore} />
         )}
       </section>
 
@@ -132,6 +168,8 @@ async function Item({ params }: { params: Params }) {
           backTo={backTo}
         />
       )}
+
+      <TakeBar itemId={item.id} itemName={item.name} groupId={groupId} available={available} />
     </main>
   );
 }

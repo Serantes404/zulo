@@ -1,16 +1,36 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Check, CircleDashed, TriangleAlert, type LucideIcon } from 'lucide-react';
 import { PhotoCapture } from '@/components/PhotoCapture';
+import { FormError } from '@/components/FormError';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
-import { CONDITION_LABEL, type ReturnCondition } from '@/lib/loans';
+import { useToast } from '@/components/ui/toaster';
+import type { ReturnCondition } from '@/lib/loans';
 import { returnAction } from './actions';
 
-export function ReturnForm({ loanId, groupId }: { loanId: string; groupId: string }) {
+const OPTIONS: { value: ReturnCondition; label: string; icon: LucideIcon }[] = [
+  { value: 'ok', label: 'Bien', icon: Check },
+  { value: 'damaged', label: 'Con daños', icon: TriangleAlert },
+  { value: 'incomplete', label: 'Incompleto', icon: CircleDashed },
+];
+
+type Props = {
+  loanId: string;
+  groupId: string;
+  /** Foto al coger (URL firmada) y su fecha corta, para la comparación Antes | Después. */
+  beforeUrl: string | null;
+  beforeDate: string;
+};
+
+export function ReturnForm({ loanId, groupId, beforeUrl, beforeDate }: Props) {
   const router = useRouter();
+  const toast = useToast();
   const [photoPath, setPhotoPath] = useState<string | null>(null);
+  const [afterUrl, setAfterUrl] = useState<string | null>(null);
   const [condition, setCondition] = useState<ReturnCondition>('ok');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -25,33 +45,92 @@ export function ReturnForm({ loanId, groupId }: { loanId: string; groupId: strin
     setPending(true);
     setError(null);
     const r = await returnAction({ loanId, photoPath, condition, notes });
-    setPending(false);
-    if (r && 'error' in r) {
+    if ('error' in r) {
+      setPending(false);
       setError(r.error);
       router.refresh();
+      return;
     }
+    toast({ title: 'Devuelto' });
+    router.push(`/loan/${loanId}`);
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-3 pt-2">
-      <PhotoCapture groupId={groupId} kind="loans" label="Foto al devolver (obligatoria)" onUploaded={(p) => setPhotoPath(p)} />
-      <fieldset>
-        <legend className="mb-1 text-sm font-medium">¿En qué estado vuelve?</legend>
-        <div className="flex flex-wrap gap-4">
-          {(Object.keys(CONDITION_LABEL) as ReturnCondition[]).map((c) => (
-            <label key={c} className="flex items-center gap-2 text-sm">
-              <input type="radio" name={`cond-${loanId}`} value={c} checked={condition === c} onChange={() => setCondition(c)} />
-              {CONDITION_LABEL[c]}
-            </label>
-          ))}
-        </div>
-      </fieldset>
-      <div className="space-y-1">
-        <Label htmlFor={`notes-${loanId}`}>Notas (opcional)</Label>
-        <Textarea id={`notes-${loanId}`} maxLength={500} placeholder="Falta una piqueta" value={notes} onChange={(e) => setNotes(e.target.value)} />
+    <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col">
+      <div className="flex-1 space-y-5 overflow-y-auto px-4 pb-4">
+        <section className="space-y-2" aria-labelledby={`rt-photo-${loanId}`}>
+          <h3 id={`rt-photo-${loanId}`} className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            1 · Foto al devolver
+          </h3>
+          <PhotoCapture
+            groupId={groupId}
+            kind="loans"
+            variant="zone"
+            label="Hacer foto al material"
+            onUploaded={(p, file) => {
+              setPhotoPath(p);
+              setAfterUrl((old) => {
+                if (old) URL.revokeObjectURL(old);
+                return URL.createObjectURL(file);
+              });
+            }}
+          />
+        </section>
+        <section className="space-y-3" aria-labelledby={`rt-det-${loanId}`}>
+          <h3 id={`rt-det-${loanId}`} className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            2 · Estado
+          </h3>
+          <RadioGroup
+            aria-label="¿En qué estado vuelve?"
+            value={condition}
+            onValueChange={(v) => setCondition(v as ReturnCondition)}
+            className="grid-cols-3"
+          >
+            {OPTIONS.map(({ value, label, icon: Icon }) => (
+              <label
+                key={value}
+                className="flex min-h-20 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border p-2 text-center text-sm font-medium has-data-checked:border-primary has-data-checked:bg-muted has-focus-visible:ring-3 has-focus-visible:ring-ring"
+              >
+                <Icon aria-hidden="true" className="size-5" />
+                {label}
+                <RadioGroupItem value={value} className="mt-1" />
+              </label>
+            ))}
+          </RadioGroup>
+          <div className="space-y-1">
+            <Label htmlFor={`notes-${loanId}`}>Notas (opcional)</Label>
+            <Textarea id={`notes-${loanId}`} maxLength={500} placeholder="Falta una piqueta" value={notes} onChange={(e) => setNotes(e.target.value)} />
+          </div>
+        </section>
+        <section className="space-y-2" aria-label="Comparación antes y después">
+          <div className="grid grid-cols-2 gap-3">
+            <figure className="space-y-1">
+              <figcaption className="text-xs font-medium text-muted-foreground">Antes · {beforeDate}</figcaption>
+              {beforeUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={beforeUrl} alt="Material al cogerlo" className="aspect-[4/3] w-full rounded-lg border object-cover" />
+              ) : (
+                <div className="aspect-[4/3] w-full rounded-lg border bg-muted" />
+              )}
+            </figure>
+            <figure className="space-y-1">
+              <figcaption className="text-xs font-medium text-muted-foreground">Después · hoy</figcaption>
+              {afterUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={afterUrl} alt="Material al devolverlo" className="aspect-[4/3] w-full rounded-lg border object-cover" />
+              ) : (
+                <div className="flex aspect-[4/3] w-full items-center justify-center rounded-lg border border-dashed text-xs text-muted-foreground">Pendiente</div>
+              )}
+            </figure>
+          </div>
+        </section>
+        <FormError id={`rt-error-${loanId}`}>{error}</FormError>
       </div>
-      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-      <Button type="submit" disabled={pending || !photoPath}>{pending ? 'Registrando…' : 'Devolver'}</Button>
+      <div className="border-t p-4">
+        <Button type="submit" size="lg" disabled={pending || !photoPath} className="w-full">
+          {pending ? 'Registrando…' : 'Confirmar devolución'}
+        </Button>
+      </div>
     </form>
   );
 }
