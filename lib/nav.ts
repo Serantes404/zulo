@@ -1,4 +1,4 @@
-export type TabKey = 'almacenes' | 'prestamos' | 'grupo';
+export type TabKey = 'almacenes' | 'material' | 'prestamos' | 'grupo';
 
 /** Id del almacén si la ruta es /g/[groupId]/w/[whId]… */
 function warehousePath(groupId: string, pathname: string): string | null {
@@ -13,6 +13,8 @@ export function tabHref(key: TabKey, groupId: string): string {
   switch (key) {
     case 'almacenes':
       return base;
+    case 'material':
+      return `${base}/material`;
     case 'prestamos':
       return `${base}/prestamos`;
     case 'grupo':
@@ -23,6 +25,7 @@ export function tabHref(key: TabKey, groupId: string): string {
 export function isTabActive(key: TabKey, groupId: string, pathname: string): boolean {
   const base = `/g/${groupId}`;
   if (key === 'almacenes') return pathname === base || pathname.startsWith(`${base}/w/`);
+  if (key === 'material') return pathname === `${base}/material` || pathname.startsWith(`${base}/material/`);
   if (key === 'prestamos') return pathname === `${base}/prestamos` || pathname.startsWith(`${base}/prestamos/`);
   if (key === 'grupo') return pathname === `${base}/grupo` || pathname.startsWith(`${base}/grupo/`);
   return false;

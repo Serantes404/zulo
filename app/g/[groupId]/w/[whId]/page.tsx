@@ -15,20 +15,24 @@ import { PlanView } from '@/components/PlanView';
 import { DEFAULT_LAYOUT, parseStoredLayout } from '@/lib/layout';
 
 type Params = Promise<{ groupId: string; whId: string }>;
+// ?zona=<id>&item=<id>: viene de la lista de Material; abre esa zona y resalta el material.
+type SearchParams = Promise<{ zona?: string | string[]; item?: string | string[] }>;
 
 export const metadata: Metadata = { title: 'Almacén' };
 
-export default function WarehousePage({ params }: { params: Params }) {
+export default function WarehousePage({ params, searchParams }: { params: Params; searchParams: SearchParams }) {
   return (
     // Con Cache Components, params y la sesión solo se leen dentro de un <Suspense>.
     <Suspense fallback={<WarehouseSkeleton />}>
-      <Warehouse params={params} />
+      <Warehouse params={params} searchParams={searchParams} />
     </Suspense>
   );
 }
 
-async function Warehouse({ params }: { params: Params }) {
+async function Warehouse({ params, searchParams }: { params: Params; searchParams: SearchParams }) {
   const { groupId, whId } = await params;
+  const sp = await searchParams;
+  const one = (v: string | string[] | undefined) => (typeof v === 'string' ? v : null);
   const { supabase, user } = await requireUser();
   const role = await getRole(supabase, groupId, user.id);
   if (!role) notFound();
@@ -85,6 +89,10 @@ async function Warehouse({ params }: { params: Params }) {
         />
       ) : (
         <PlanView
+          // Una entrada nueva desde Material (otra zona u otro material) empieza con ese estado.
+          key={`${one(sp.zona) ?? ''}:${one(sp.item) ?? ''}`}
+          initialZoneId={zoneIds.includes(one(sp.zona) ?? '') ? one(sp.zona) : null}
+          initialItemId={one(sp.item)}
           imageUrl={wh.plan_image_path ? urls[wh.plan_image_path] ?? null : null}
           layout={wh.plan_source === 'sketch' ? parseStoredLayout(wh.layout) ?? DEFAULT_LAYOUT : null}
           aspectRatio={Number(wh.aspect_ratio)}

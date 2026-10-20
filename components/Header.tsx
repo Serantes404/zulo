@@ -33,9 +33,9 @@ export async function Header() {
           <AvatarMenu name={fullName ?? user.email ?? 'Sin nombre'} initials={initials(fullName, user.email)} />
           {/* Salir siempre visible (no dentro de un menú): lo pide el contrato de evaluación (data-testid="logout"). */}
           <form action={signOut}>
-            <Button type="submit" variant="ghost" size="lg" data-testid="logout" className="px-2.5 md:px-3">
+            <Button type="submit" variant="ghost" size="lg" data-testid="logout" className="px-2.5 lg:px-3">
               <LogOut aria-hidden="true" />
-              <span className="sr-only md:not-sr-only">Salir</span>
+              <span className="sr-only lg:not-sr-only">Salir</span>
             </Button>
           </form>
         </div>

@@ -21,13 +21,15 @@ export function HeaderTabs() {
               <Link
                 href={tabHref(key, groupId)}
                 aria-current={active ? 'page' : undefined}
+                title={label}
                 className={cn(
                   'inline-flex h-10 items-center gap-2 rounded-md px-3 text-sm font-medium outline-none transition-colors duration-(--dur-fast) ease-(--ease-zulo) hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                   active ? 'text-foreground shadow-[inset_0_-2px_0_var(--signal)]' : 'text-muted-foreground hover:text-foreground',
                 )}
               >
                 <Icon aria-hidden="true" className="size-5" strokeWidth={1.75} />
-                {label}
+                {/* Entre md y lg no caben cuatro pestañas con texto junto al selector de grupo: solo icono. */}
+                <span className="sr-only lg:not-sr-only">{label}</span>
               </Link>
             </li>
           );

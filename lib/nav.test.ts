@@ -2,8 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { hidesBottomNav, initials, tabHref, isTabActive } from './nav';
 
 describe('tabHref', () => {
-  it('Almacenes, Préstamos y Grupo', () => {
+  it('Almacenes, Material, Préstamos y Grupo', () => {
     expect(tabHref('almacenes', 'g1')).toBe('/g/g1');
+    expect(tabHref('material', 'g1')).toBe('/g/g1/material');
     expect(tabHref('prestamos', 'g1')).toBe('/g/g1/prestamos');
     expect(tabHref('grupo', 'g1')).toBe('/g/g1/grupo');
   });
@@ -22,6 +23,11 @@ describe('isTabActive', () => {
     expect(isTabActive('almacenes', 'g1', '/g/g1')).toBe(true);
     expect(isTabActive('almacenes', 'g1', '/g/g1/w/w1')).toBe(true);
     expect(isTabActive('almacenes', 'g1', '/g/g1/prestamos')).toBe(false);
+  });
+  it('Material', () => {
+    expect(isTabActive('material', 'g1', '/g/g1/material')).toBe(true);
+    expect(isTabActive('material', 'g1', '/g/g1')).toBe(false);
+    expect(isTabActive('almacenes', 'g1', '/g/g1/material')).toBe(false);
   });
   it('Préstamos', () => {
     expect(isTabActive('prestamos', 'g1', '/g/g1/prestamos')).toBe(true);

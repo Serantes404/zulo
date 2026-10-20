@@ -27,6 +27,9 @@ type Props = {
   warehouseId: string;
   /** Miniatura: solo el plano, sin foco, sin handlers y oculto a lectores de pantalla. */
   static?: boolean;
+  /** Zona abierta y material resaltado al llegar (desde la lista de Material). */
+  initialZoneId?: string | null;
+  initialItemId?: string | null;
 };
 
 const GRID =
@@ -42,9 +45,21 @@ function useIsDesktop() {
   return useSyncExternalStore(subscribeLg, () => window.matchMedia(LG).matches, () => false);
 }
 
-export function PlanView({ imageUrl, aspectRatio, layout, zones, items, isAdmin, groupId, warehouseId, static: isStatic = false }: Props) {
-  const [selected, setSelected] = useState<string | null>(null);
-  const [highlight, setHighlight] = useState<string | null>(null);
+export function PlanView({
+  imageUrl,
+  aspectRatio,
+  layout,
+  zones,
+  items,
+  isAdmin,
+  groupId,
+  warehouseId,
+  static: isStatic = false,
+  initialZoneId = null,
+  initialItemId = null,
+}: Props) {
+  const [selected, setSelected] = useState<string | null>(initialZoneId);
+  const [highlight, setHighlight] = useState<string | null>(initialZoneId ? initialItemId : null);
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const isDesktop = useIsDesktop();
