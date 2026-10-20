@@ -20,15 +20,16 @@ export function tabHref(key: TabKey, groupId: string, pathname: string): string 
     case 'prestamos':
       return `${base}/prestamos`;
     case 'grupo':
-      return `${base}#miembros`;
+      return `${base}/grupo`;
   }
 }
 
-/** El hash no llega al servidor ni a usePathname: Buscar y Grupo nunca se marcan. */
+/** El hash no llega al servidor ni a usePathname: Buscar nunca se marca. */
 export function isTabActive(key: TabKey, groupId: string, pathname: string): boolean {
   const base = `/g/${groupId}`;
   if (key === 'almacenes') return pathname === base || pathname.startsWith(`${base}/w/`);
   if (key === 'prestamos') return pathname === `${base}/prestamos` || pathname.startsWith(`${base}/prestamos/`);
+  if (key === 'grupo') return pathname === `${base}/grupo` || pathname.startsWith(`${base}/grupo/`);
   return false;
 }
 

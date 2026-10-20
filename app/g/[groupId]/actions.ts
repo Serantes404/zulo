@@ -35,6 +35,7 @@ export async function regenerateInvite(groupId: string): Promise<{ ok: true } | 
   const { error } = await supabase.rpc('regenerate_invite', { p_group: groupId });
   if (error) return { error: 'No se ha podido crear el link nuevo.' };
   revalidatePath(`/g/${groupId}`);
+  revalidatePath(`/g/${groupId}/grupo`);
   return { ok: true };
 }
 
@@ -51,6 +52,7 @@ export async function makeAdmin(groupId: string, userId: string): Promise<{ ok: 
   // Con RLS, si no eres admin el update no da error: simplemente no toca ninguna fila.
   if (error || !data || data.length === 0) return { error: 'No se ha podido hacer admin a este miembro.' };
   revalidatePath(`/g/${groupId}`);
+  revalidatePath(`/g/${groupId}/grupo`);
   return { ok: true };
 }
 

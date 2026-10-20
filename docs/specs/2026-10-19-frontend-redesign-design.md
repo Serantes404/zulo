@@ -221,7 +221,7 @@ Escala de Tailwind en múltiplos de 4. Gutter móvil de **16 px** (`px-4`). Sepa
   | Almacenes | `Warehouse` | `/g/[id]` (o el último almacén visitado) |
   | Buscar | `Search` | Abre el buscador del almacén actual (o, si hay varios, un buscador del grupo; ver §8) |
   | Préstamos | `HandCoins` | "Mis préstamos" (`/g/[id]/prestamos`, ver §8) |
-  | Grupo | `Users` | Miembros e invitación (`/g/[id]#miembros`, o una sección del grupo) |
+  | Grupo | `Users` | Miembros e invitación (`/g/[id]/grupo`) |
 
   La pestaña activa lleva un indicador `--signal` de 3 px arriba, icono y texto en `--foreground` y `aria-current="page"`. Las inactivas usan `--muted-foreground`. Cada pestaña mide al menos 64×56 px.
 - **Escritorio (≥ md):** no hay barra inferior. Las pestañas pasan a la cabecera como enlaces de texto con icono, y el contenido se centra.
