@@ -12,6 +12,7 @@ const MESSAGES: Record<string, string> = {
   WAREHOUSE_LIMIT: 'Este grupo ya tiene el máximo de 20 almacenes.',
   ITEM_LIMIT: 'Este grupo ya tiene el máximo de 2000 materiales.',
   NAME_MISMATCH: 'El nombre no coincide con el del grupo.',
+  PHOTOS_LEFT: 'Quedan fotos del grupo sin borrar. Inténtalo de nuevo.',
 };
 
 export const NO_PERMISSION = MESSAGES.FORBIDDEN;

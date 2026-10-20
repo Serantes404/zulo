@@ -158,7 +158,7 @@ describe('deleteGroup', () => {
   const rpcs = () => db.calls.filter((c) => c.op === 'rpc');
   it('un admin con el nombre correcto borra fotos y grupo y vuelve a la portada', async () => {
     await expect(deleteGroup(G, ' Scouts ')).rejects.toThrow('REDIRECT:/');
-    expect(rpcs()).toMatchObject([{ rpc: 'delete_group', payload: { p_group: G, p_name: ' Scouts ' } }]);
+    expect(rpcs()).toMatchObject([{ rpc: 'delete_group', payload: { p_group: G, p_name: 'Scouts' } }]);
   });
   it('un miembro no admin recibe error sin borrar nada', async () => {
     role = 'member';
@@ -168,6 +168,10 @@ describe('deleteGroup', () => {
   it('con otro nombre no borra', async () => {
     expect(await deleteGroup(G, 'scouts')).toEqual({ error: 'El nombre no coincide con el del grupo.' });
     expect(rpcs()).toEqual([]);
+  });
+  it('un nombre que no es texto devuelve error sin consultar', async () => {
+    expect(await deleteGroup(G, 42 as unknown as string)).toEqual({ error: NO_PERMISSION });
+    expect(db.calls).toEqual([]);
   });
   it("groupId='x' devuelve error sin consultar", async () => {
     expect(await deleteGroup('x', 'Scouts')).toEqual({ error: NO_PERMISSION });

@@ -1,5 +1,5 @@
 'use client';
-import { useId, useState, useTransition } from 'react';
+import { useId, useRef, useState, useTransition } from 'react';
 import { Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,6 +15,8 @@ import { deleteGroup } from './actions';
 export function DeleteGroup({ groupId, groupName }: { groupId: string; groupName: string }) {
   const inputId = useId();
   const errorId = useId();
+  const titleId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [typed, setTyped] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -37,13 +39,16 @@ export function DeleteGroup({ groupId, groupName }: { groupId: string; groupName
     // Si va bien, deleteGroup redirige a la portada.
     startTransition(async () => {
       const r = await deleteGroup(groupId, typed);
-      if (r?.error) setError(r.error);
+      if (r?.error) {
+        setError(r.error);
+        inputRef.current?.focus();
+      }
     });
   }
 
   return (
-    <section aria-labelledby="eliminar-title" className="space-y-3 rounded-xl border border-destructive/40 p-4">
-      <h2 id="eliminar-title" className="font-semibold">Eliminar grupo</h2>
+    <section aria-labelledby={titleId} className="space-y-3 rounded-xl border border-destructive/40 p-4">
+      <h2 id={titleId} className="font-semibold">Eliminar grupo</h2>
       <p className="text-sm text-muted-foreground">
         Se borran para siempre los almacenes, el material, los préstamos y todas las fotos. Nadie podrá volver a entrar.
       </p>
@@ -64,12 +69,13 @@ export function DeleteGroup({ groupId, groupName }: { groupId: string; groupName
             <div className="space-y-2">
               <Label htmlFor={inputId}>Escribe el nombre del grupo para confirmar</Label>
               <Input
+                ref={inputRef}
                 id={inputId}
                 value={typed}
                 onChange={(e) => setTyped(e.target.value)}
                 autoComplete="off"
                 placeholder={groupName}
-                disabled={pending}
+                readOnly={pending}
                 aria-invalid={error ? true : undefined}
                 aria-describedby={error ? errorId : undefined}
               />

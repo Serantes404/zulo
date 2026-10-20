@@ -16,6 +16,9 @@ begin
     ('00000000-0000-0000-0000-00000000000b', 'beto@test.dev'),
     ('00000000-0000-0000-0000-00000000000c', 'carla@test.dev');
 
+  -- Algunas versiones de Storage solo dejan borrar filas de storage.objects con este ajuste.
+  perform set_config('storage.allow_delete_query', 'true', true);
+
   -- ---------- Ana crea el grupo con almacén, zona, material, préstamo activo y uso de IA ----------
   perform set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000000a"}', true);
   perform set_config('role', 'authenticated', true);
@@ -66,6 +69,18 @@ begin
     raise exception 'FALLO: el nombre equivocado ha borrado el grupo';
   end if;
 
+  -- ---------- Ana: si quedan fotos en Storage no borra (quedarían huérfanas) ----------
+  insert into storage.objects (bucket_id, name) values ('photos', v_g::text || '/plans/' || gen_random_uuid()::text || '.jpg');
+  begin
+    perform public.delete_group(v_g, 'Scouts');
+    raise exception 'FALLO: borra el grupo con fotos en Storage';
+  exception when others then
+    if sqlerrm <> 'PHOTOS_LEFT' then raise; end if;
+  end;
+  delete from storage.objects where bucket_id = 'photos' and name like v_g::text || '/%';
+  get diagnostics v_n = row_count;
+  if v_n <> 1 then raise exception 'FALLO: el admin no puede borrar las fotos del grupo'; end if;
+
   -- ---------- Ana: con el nombre correcto borra todo, aunque haya un préstamo activo ----------
   perform public.delete_group(v_g, '  Scouts ');
   reset role;
@@ -85,5 +100,5 @@ begin
   end if;
 
   -- Siempre termina en excepción para que no quede nada guardado.
-  raise exception 'OK: eliminar grupo (solo admin, con nombre, borra todo y conserva el uso de IA)';
+  raise exception 'OK: eliminar grupo (solo admin, con nombre, sin fotos pendientes, borra todo y conserva el uso de IA)';
 end $$;
