@@ -5,7 +5,7 @@ import { PhotoCapture } from '@/components/PhotoCapture';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { defaultDueDate, toISODate } from '@/lib/dates';
+import { defaultDueDate, todayInMadrid } from '@/lib/dates';
 import { checkoutAction } from './actions';
 
 export function CheckoutForm({ itemId, groupId, available }: { itemId: string; groupId: string; available: number }) {
@@ -51,7 +51,7 @@ export function CheckoutForm({ itemId, groupId, available }: { itemId: string; g
         </div>
         <div className="space-y-1">
           <Label htmlFor="co-due">Lo devuelvo el</Label>
-          <Input id="co-due" type="date" required min={toISODate(new Date())} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+          <Input id="co-due" type="date" required min={todayInMadrid()} value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
         </div>
       </div>
       <div className="space-y-1">

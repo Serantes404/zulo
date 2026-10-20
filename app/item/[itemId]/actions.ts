@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { requireUser } from '@/lib/auth';
 import { checkoutSchema, itemSchema, returnSchema } from '@/lib/schemas';
 import { rpcErrorMessage } from '@/lib/errors';
-import { toISODate } from '@/lib/dates';
+import { todayInMadrid } from '@/lib/dates';
 import { safeNext } from '@/lib/safeNext';
 
 export type ActionResult = { ok: true } | { error: string };
@@ -13,8 +13,7 @@ export async function checkoutAction(input: unknown): Promise<ActionResult> {
   const p = checkoutSchema.safeParse(input);
   if (!p.success) return { error: 'Revisa los datos del formulario.' };
   const { itemId, quantity, purpose, dueDate, photoPath } = p.data;
-  // margen de 1 día porque el servidor usa UTC
-  if (dueDate < toISODate(new Date(Date.now() - 86_400_000))) {
+  if (dueDate < todayInMadrid()) {
     return { error: 'La fecha de devolución no puede ser anterior a hoy.' };
   }
   const { supabase } = await requireUser();
