@@ -1,7 +1,10 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { safeNext } from '@/lib/safeNext';
 
-const PUBLIC_PATHS = ['/login'];
+// `/` es la portada pública; /login y /signup, los formularios de acceso.
+const AUTH_PATHS = ['/login', '/signup'];
+const isAuthPath = (path: string) => AUTH_PATHS.some((p) => path === p || path.startsWith(`${p}/`));
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -22,7 +25,11 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
   const path = request.nextUrl.pathname;
-  if (!user && !PUBLIC_PATHS.some((p) => path.startsWith(p))) {
+  // Con sesión, la portada, /login y /signup llevan directamente a donde iba (por defecto /app).
+  if (user && (path === '/' || isAuthPath(path))) {
+    return NextResponse.redirect(new URL(safeNext(request.nextUrl.searchParams.get('next')), request.url));
+  }
+  if (!user && path !== '/' && !isAuthPath(path)) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.search = `?next=${encodeURIComponent(path)}`;

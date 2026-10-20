@@ -1,5 +1,31 @@
 @AGENTS.md
 
+## Grading contract — EdTech Challenge (never remove or break this)
+An automated bot grades this app on its public Vercel URL, acting like a stranger.
+
+### Pages
+- `/` public landing page (no login needed): what the app does, who it is for, and one button to sign up.
+- `/signup` sign-up with email + password. `/login` login with email + password.
+- `/app` the main feature, only for logged-in users.
+- After sign-up and after login, send the user to `/app`.
+- No email confirmation, no CAPTCHA, no "Google only" login, no mandatory onboarding before `/app`.
+
+### data-testid attributes (exact names, do not translate)
+- Sign-up form: `signup-email`, `signup-password`, `signup-submit`
+- Login form: `login-email`, `login-password`, `login-submit`
+- `logout`: the logout button, visible on every page of a logged-in user
+- On `/app`:
+  - `core-input`: a TEXT field of the main feature (type="text" or a textarea, e.g. the title or description, never a number or date picker). The bot types a short text like "QA-7F3K2A grading bot test"
+  - `core-submit`: the button that saves it
+  - `core-item`: EVERY saved item in the list, showing the text typed in `core-input`
+- Typing only in `core-input` and clicking `core-submit` must save a new item. Any other field needs a valid default value.
+
+### Data and security
+- Use Supabase Auth (email + password) and save all data in Supabase tables, never only in the browser (no localStorage for user data).
+- Row Level Security ON for every table, with policies based on `auth.uid()`. Nobody can read anything without logging in.
+- Only the Supabase URL and the publishable (anon) key may reach the browser. Never put the secret/service_role key or any AI API key in the frontend or in GitHub.
+- Keep keys in `.env.local` (listed in `.gitignore`) and in Vercel environment variables.
+
 # Zulo: contexto para Claude Code
 
 App de inventario visual para clubs: foto del almacén → la IA (API de Gemini) propone zonas → material por zona → préstamos con foto al coger y al devolver.
@@ -14,6 +40,7 @@ App de inventario visual para clubs: foto del almacén → la IA (API de Gemini)
 - **Prioridades:** entrega hacia el 2026-10-21. Primero funcionalidad; el frontend bonito va al final. Adelantar el despliegue a Vercel (T14) a mitad de semana.
 
 ## Reglas
+- En Zulo, la "main feature" del contrato es crear el grupo del club en `/app` (`core-input` = nombre del grupo, `core-item` = cada tarjeta de grupo). Crear un grupo NO navega: se queda en `/app` y aparece en la lista.
 - No uses `npm install <paquete>` (npm 11.6 rompe el lockfile; ver rulings).
 - Next 16: usa `proxy.ts`, no `middleware.ts`. Consulta `node_modules/next/dist/docs/` antes de escribir APIs de Next.
 - UI en español, mobile-first, con `<label>` en todos los inputs.

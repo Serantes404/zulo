@@ -21,7 +21,7 @@ export default function ErrorPage({ error, retry }: { error: Error & { digest?: 
             <Button size="lg" onClick={() => retry()}>
               Reintentar
             </Button>
-            <Link href="/" className={buttonVariants({ size: 'lg', variant: 'outline' })}>
+            <Link href="/app" className={buttonVariants({ size: 'lg', variant: 'outline' })}>
               Volver a mis grupos
             </Link>
           </div>

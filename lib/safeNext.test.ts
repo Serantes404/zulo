@@ -4,24 +4,24 @@ import { safeNext } from './safeNext';
 describe('safeNext', () => {
   it('acepta rutas internas', () => expect(safeNext('/g/123')).toBe('/g/123'));
   it('devuelve / si no hay valor', () => {
-    expect(safeNext(null)).toBe('/');
-    expect(safeNext(undefined)).toBe('/');
-    expect(safeNext('')).toBe('/');
+    expect(safeNext(null)).toBe('/app');
+    expect(safeNext(undefined)).toBe('/app');
+    expect(safeNext('')).toBe('/app');
   });
-  it('rechaza URLs externas', () => expect(safeNext('https://evil.com')).toBe('/'));
-  it('rechaza //host', () => expect(safeNext('//evil.com')).toBe('/'));
-  it('rechaza /\\host', () => expect(safeNext('/\\/evil.com')).toBe('/'));
-  it('rechaza /\\host sin segunda barra', () => expect(safeNext('/\\evil.com')).toBe('/'));
-  it('rechaza tabulador tras la barra', () => expect(safeNext('/\t/evil.com')).toBe('/'));
-  it('rechaza salto de línea tras la barra', () => expect(safeNext('/\n/evil.com')).toBe('/'));
-  it('rechaza %09 sin decodificar', () => expect(safeNext('/%09/evil.com')).toBe('/'));
+  it('rechaza URLs externas', () => expect(safeNext('https://evil.com')).toBe('/app'));
+  it('rechaza //host', () => expect(safeNext('//evil.com')).toBe('/app'));
+  it('rechaza /\\host', () => expect(safeNext('/\\/evil.com')).toBe('/app'));
+  it('rechaza /\\host sin segunda barra', () => expect(safeNext('/\\evil.com')).toBe('/app'));
+  it('rechaza tabulador tras la barra', () => expect(safeNext('/\t/evil.com')).toBe('/app'));
+  it('rechaza salto de línea tras la barra', () => expect(safeNext('/\n/evil.com')).toBe('/app'));
+  it('rechaza %09 sin decodificar', () => expect(safeNext('/%09/evil.com')).toBe('/app'));
   it('rechaza %0a, %0d y %5C en cualquier capitalización', () => {
-    expect(safeNext('/%0A/evil.com')).toBe('/');
-    expect(safeNext('/%0d/evil.com')).toBe('/');
-    expect(safeNext('/%5C/evil.com')).toBe('/');
-    expect(safeNext('/%5cevil.com')).toBe('/');
+    expect(safeNext('/%0A/evil.com')).toBe('/app');
+    expect(safeNext('/%0d/evil.com')).toBe('/app');
+    expect(safeNext('/%5C/evil.com')).toBe('/app');
+    expect(safeNext('/%5cevil.com')).toBe('/app');
   });
-  it('rechaza el carácter DEL', () => expect(safeNext('/\x7f/evil.com')).toBe('/'));
+  it('rechaza el carácter DEL', () => expect(safeNext('/\x7f/evil.com')).toBe('/app'));
   it('/ /evil.com no resuelve fuera del origen', () => {
     const r = safeNext('/ /evil.com');
     expect(r.startsWith('/')).toBe(true);
@@ -43,7 +43,7 @@ describe('safeNext', () => {
     '/%2e%2e/%2e%2e//evil.com',
     '/.//evil.com?x=1#h',
   ];
-  it.each(malicious)('segmentos de punto que acaban en //host: %s → /', (x) => expect(safeNext(x)).toBe('/'));
+  it.each(malicious)('segmentos de punto que acaban en //host: %s → /app', (x) => expect(safeNext(x)).toBe('/app'));
 
   const samples = [
     ...malicious,

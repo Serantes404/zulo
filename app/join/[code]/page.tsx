@@ -44,7 +44,7 @@ async function JoinForm({ params, searchParams }: Props) {
           </span>
         }
         action={
-          <Link href="/" className={buttonVariants({ size: 'lg' })}>
+          <Link href="/app" className={buttonVariants({ size: 'lg' })}>
             Ir a mis grupos
           </Link>
         }

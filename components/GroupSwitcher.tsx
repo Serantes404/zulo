@@ -51,7 +51,7 @@ export function GroupSwitcher({ groups }: { groups: SwitcherGroup[] }) {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         {/* La creación de grupos vive en la portada (formulario "Crear un grupo nuevo"). */}
-        <DropdownMenuItem render={<Link href="/#crear" onClick={onCreateGroupClick} />}>Crear grupo</DropdownMenuItem>
+        <DropdownMenuItem render={<Link href="/app#crear" onClick={onCreateGroupClick} />}>Crear grupo</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

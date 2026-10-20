@@ -30,7 +30,7 @@ beforeEach(() => {
 
 describe('createGroup', () => {
   it('crea el grupo y redirige a él', async () => {
-    await expect(createGroup(null, form('Scouts'))).rejects.toThrow(`REDIRECT:/g/${G}`);
+    expect(await createGroup(null, form('Scouts'))).toEqual({ ok: true });
     expect(revalidatePath).toHaveBeenCalledWith('/', 'layout');
   });
   it('GROUP_LIMIT devuelve el mensaje del límite en vez de lanzar', async () => {

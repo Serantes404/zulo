@@ -104,7 +104,7 @@ export async function deleteGroup(groupId: string, confirmName: string): Promise
     return { error: rpcErrorMessage(error.message, 'No se ha podido eliminar el grupo. Las fotos ya se han borrado: inténtalo de nuevo.') };
   }
   revalidatePath('/', 'layout');
-  redirect('/');
+  redirect('/app');
 }
 
 export async function renameWarehouse(

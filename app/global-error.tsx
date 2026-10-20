@@ -32,8 +32,7 @@ export default function GlobalError({ error, retry }: { error: Error & { digest?
               Reintentar
             </button>
             {/* Enlace nativo: el router de Next puede no estar disponible si falló el layout raíz. */}
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-            <a href="/" style={{ ...button, border: '1px solid #bbb', color: '#111' }}>
+            <a href="/app" style={{ ...button, border: '1px solid #bbb', color: '#111' }}>
               Volver a mis grupos
             </a>
           </div>

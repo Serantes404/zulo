@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: { default: "Zulo", template: "%s · Zulo" },
-  description: "Inventario visual para clubs",
+  description: "El material de tu club universitario, siempre localizado.",
 };
 
 export const viewport: Viewport = {

@@ -1,104 +1,66 @@
 import type { Metadata } from 'next';
-import { Suspense } from 'react';
-import { ListSkeleton } from '@/components/skeletons';
 import Link from 'next/link';
-import { ChevronRight, Plus, UsersRound } from 'lucide-react';
-import { requireUser } from '@/lib/auth';
-import { initials } from '@/lib/nav';
-import { EmptyState } from '@/components/EmptyState';
+import { ArrowRight, Camera, HandCoins, MapPin } from 'lucide-react';
+import { Logo } from '@/components/Logo';
 import { buttonVariants } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { CreateGroupForm } from './CreateGroupForm';
-import { CreateGroupLink } from './CreateGroupLink';
+import { PlanArt } from './login/PlanArt';
 
-// Colores de la paleta de zonas (decorativos), elegidos por hash del id del grupo.
-const AVATAR_TINTS = [
-  'bg-chart-1/20',
-  'bg-chart-2/20',
-  'bg-chart-3/20',
-  'bg-chart-4/20',
-  'bg-chart-5/20',
+export const metadata: Metadata = {
+  title: { absolute: 'Zulo · El material de tu club universitario, siempre localizado' },
+  description:
+    'Zulo ayuda a los responsables de material de clubs y asociaciones universitarias a saber qué hay en el almacén, dónde está y quién se lo ha llevado.',
+};
+
+const STEPS = [
+  { icon: Camera, title: 'Haz una foto del almacén', text: 'La IA dibuja el plano y marca las zonas: estantería, armario, cajas…' },
+  { icon: MapPin, title: 'Apunta el material por zona', text: 'Cualquiera del club ve qué hay y dónde está, desde el móvil.' },
+  { icon: HandCoins, title: 'Presta con foto y fecha', text: 'Quién se lo llevó, cuándo lo devuelve y en qué estado vuelve.' },
 ];
 
-function tintFor(id: string): string {
-  let h = 0;
-  for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-  return AVATAR_TINTS[h % AVATAR_TINTS.length];
-}
-
-export const metadata: Metadata = { title: 'Mis grupos' };
-
-export default function Home() {
+/** Portada pública (con sesión, el proxy manda a /app): qué es, para quién y un único botón para crear cuenta. */
+export default function Landing() {
   return (
-    <main className="mx-auto max-w-lg space-y-6 p-4 md:max-w-3xl">
-      <h1 className="text-2xl font-semibold tracking-tight">Mis grupos</h1>
-      {/* Con Cache Components, la sesión solo se lee dentro de un <Suspense>. */}
-      <Suspense fallback={<ListSkeleton />}>
-        <MyGroups />
-      </Suspense>
-    </main>
-  );
-}
+    <main className="mx-auto w-full max-w-5xl px-4 pb-12">
+      <nav aria-label="Cuenta" className="flex h-14 items-center justify-between">
+        <Logo href="/" />
+        <Link href="/login" className="inline-flex min-h-11 items-center text-sm font-medium underline-offset-4 hover:underline">
+          Entrar
+        </Link>
+      </nav>
 
-async function MyGroups() {
-  const { supabase, user } = await requireUser();
-  const { data: memberships } = await supabase
-    .from('group_members')
-    .select('role, groups(id, name)')
-    .eq('user_id', user.id)
-    .order('created_at');
+      <section className="grid gap-8 pt-6 md:grid-cols-2 md:items-center md:pt-12">
+        <div className="space-y-5">
+          <p className="font-mono text-xs font-medium tracking-[0.12em] text-signal-ink uppercase">Para clubs y asociaciones universitarias</p>
+          <h1 className="text-3xl leading-tight font-semibold tracking-tight md:text-5xl">
+            El material de tu club, siempre localizado.
+          </h1>
+          <p className="text-lg text-muted-foreground">
+            Zulo ayuda a los responsables de material de clubs universitarios a saber qué hay en el almacén, dónde está y quién se lo ha llevado.
+          </p>
+          <Link href="/signup" className={buttonVariants({ size: 'lg', className: 'h-12 px-6 text-base' })}>
+            Crear cuenta gratis
+            <ArrowRight aria-hidden="true" />
+          </Link>
+          <p className="text-sm text-muted-foreground">Gratis. Solo email y contraseña.</p>
+        </div>
+        <PlanArt className="w-full rounded-xl border border-plan-line" />
+      </section>
 
-  if (!memberships || memberships.length === 0) {
-    return (
-      <>
-        <EmptyState
-          icon={UsersRound}
-          title="Aún no estás en ningún grupo"
-          description="Crea el de tu club o pide el link a tu monitor."
-          action={
-            <CreateGroupLink className={buttonVariants({ size: 'lg' })}>
-              Crear grupo
-            </CreateGroupLink>
-          }
-        />
-        <CreateGroupForm hasGroups={false} />
-      </>
-    );
-  }
-  return (
-    <>
-      <ul className="grid gap-3 md:grid-cols-2">
-        {memberships.map((m) =>
-          m.groups ? (
-            <li key={m.groups.id}>
-              <Link
-                href={`/g/${m.groups.id}`}
-                className="flex min-h-[72px] items-center gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-muted outline-none focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-              >
-                <Avatar className="size-12">
-                  <AvatarFallback aria-hidden="true" className={`${tintFor(m.groups.id)} text-foreground`}>
-                    {initials(m.groups.name, null)}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-semibold">{m.groups.name}</span>
-                  <span className="block font-mono text-xs uppercase tracking-widest text-muted-foreground">
-                    {m.role === 'admin' ? 'Admin' : 'Miembro'}
-                  </span>
-                </span>
-                <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
-              </Link>
+      <section aria-labelledby="como-title" className="mt-14 space-y-4">
+        <h2 id="como-title" className="font-mono text-xs font-medium tracking-[0.12em] text-muted-foreground uppercase">Cómo funciona</h2>
+        <ol className="grid gap-3 md:grid-cols-3">
+          {STEPS.map(({ icon: Icon, title, text }, i) => (
+            <li key={title} className="space-y-2 rounded-xl border bg-card p-4">
+              <Icon aria-hidden="true" className="size-5 text-signal-ink" />
+              <h3 className="font-semibold">
+                <span className="sr-only">Paso {i + 1}: </span>
+                {title}
+              </h3>
+              <p className="text-sm text-muted-foreground">{text}</p>
             </li>
-          ) : null,
-        )}
-        <li className="hidden md:flex">
-          <CreateGroupLink className="flex min-h-[72px] flex-1 items-center justify-center gap-2 rounded-lg border border-dashed p-3 font-medium text-muted-foreground transition-colors hover:bg-muted outline-none focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
-            <Plus className="size-5" aria-hidden="true" />
-            Crear grupo
-          </CreateGroupLink>
-        </li>
-      </ul>
-      <CreateGroupForm hasGroups />
-    </>
+          ))}
+        </ol>
+      </section>
+    </main>
   );
 }

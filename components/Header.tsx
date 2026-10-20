@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { LogOut } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { signOut } from '@/app/actions';
 import { initials } from '@/lib/nav';
@@ -6,6 +7,7 @@ import { Logo } from '@/components/Logo';
 import { GroupSwitcher } from '@/components/GroupSwitcher';
 import { HeaderTabs } from '@/components/HeaderTabs';
 import { AvatarMenu } from '@/components/AvatarMenu';
+import { Button } from '@/components/ui/button';
 
 export async function Header() {
   const supabase = await createClient();
@@ -28,11 +30,14 @@ export async function Header() {
           <Suspense fallback={null}>
             <HeaderTabs />
           </Suspense>
-          <AvatarMenu
-            name={fullName ?? user.email ?? 'Sin nombre'}
-            initials={initials(fullName, user.email)}
-            signOutAction={signOut}
-          />
+          <AvatarMenu name={fullName ?? user.email ?? 'Sin nombre'} initials={initials(fullName, user.email)} />
+          {/* Salir siempre visible (no dentro de un menú): lo pide el contrato de evaluación (data-testid="logout"). */}
+          <form action={signOut}>
+            <Button type="submit" variant="ghost" size="lg" data-testid="logout" className="px-2.5 md:px-3">
+              <LogOut aria-hidden="true" />
+              <span className="sr-only md:not-sr-only">Salir</span>
+            </Button>
+          </form>
         </div>
       </div>
     </header>

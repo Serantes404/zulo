@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Zulo
 
-## Getting Started
+**El material de tu club universitario, siempre localizado.**
 
-First, run the development server:
+Zulo ayuda a los responsables de material de clubs y asociaciones universitarias a saber qué hay en el almacén, dónde está y quién se lo ha llevado.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+App en producción: https://zulo-nine.vercel.app
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Qué hace
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Creas el grupo de tu club** e invitas a los demás con un link.
+2. **Haces una foto del almacén** (o lo dibujas): la IA propone el plano y las zonas (estantería, armario, cajas…).
+3. **Apuntas el material por zona**, con foto y cantidad.
+4. **Prestas con foto y fecha de devolución**: se ve quién lo tiene, qué está vencido y en qué estado vuelve.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Cada grupo es privado: solo sus miembros ven sus almacenes, material y préstamos.
 
-## Learn More
+## Stack
 
-To learn more about Next.js, take a look at the following resources:
+- Next.js 16 (App Router, Server Actions, `cacheComponents`), Tailwind CSS v4, componentes sobre Base UI.
+- Supabase: Auth con email y contraseña, Postgres con Row Level Security en todas las tablas, Storage para las fotos.
+- API de Gemini para detectar las zonas (solo en el servidor, con cuota diaria).
+- Vercel para el despliegue.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Ejecutarlo en local
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Crea `.env.local` con:
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=...
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+   GEMINI_API_KEY=...
+   ```
+2. Aplica las migraciones de `supabase/migrations/` en orden en el SQL Editor de Supabase.
+3. `npm ci` y `npm run dev`, y abre http://localhost:3000.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Tests: `npm test` (Vitest). Las pruebas de seguridad de la base de datos están en `supabase/tests/` y se ejecutan en el SQL Editor.

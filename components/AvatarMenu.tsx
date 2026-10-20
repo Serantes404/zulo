@@ -1,6 +1,5 @@
 'use client';
 
-import { startTransition } from 'react';
 import Link from 'next/link';
 import {
   DropdownMenu,
@@ -13,15 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
-export function AvatarMenu({
-  name,
-  initials,
-  signOutAction,
-}: {
-  name: string;
-  initials: string;
-  signOutAction: () => void | Promise<void>;
-}) {
+export function AvatarMenu({ name, initials }: { name: string; initials: string }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -38,8 +29,6 @@ export function AvatarMenu({
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem render={<Link href="/welcome" />}>Cambiar nombre</DropdownMenuItem>
-        {/* Se llama a la acción directamente: un <form> dentro del popup se desmontaría al cerrarse el menú. */}
-        <DropdownMenuItem onClick={() => startTransition(() => signOutAction())}>Salir</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

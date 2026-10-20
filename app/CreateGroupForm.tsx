@@ -8,9 +8,9 @@ import { CREATE_GROUP_INPUT_ID, focusCreateGroup } from '@/lib/focusCreateGroup'
 import { createGroup } from './actions';
 
 export function CreateGroupForm({ hasGroups }: { hasGroups: boolean }) {
-  // Si va bien, createGroup redirige al grupo; si no (p. ej. límite de grupos), devuelve el error.
+  // Si va bien, el grupo nuevo aparece en la lista de /app; si no (p. ej. límite de grupos), devuelve el error.
   const [state, formAction, pending] = useActionState(createGroup, null);
-  const error = state?.error;
+  const error = state && 'error' in state ? state.error : undefined;
   // Al llegar con #crear (desde otra página o con otro hash) enfoca el campo una vez montado el formulario.
   useEffect(() => {
     const check = () => {
@@ -32,19 +32,22 @@ export function CreateGroupForm({ hasGroups }: { hasGroups: boolean }) {
         <div className="flex gap-2">
           <Input
             id={CREATE_GROUP_INPUT_ID}
+            data-testid="core-input"
+            type="text"
             name="name"
             required
             maxLength={80}
-            placeholder="Scouts Seeonee"
+            placeholder="Club de Montaña"
             className="h-11"
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? 'crear-error' : undefined}
           />
-          <Button type="submit" size="lg" className="h-11 px-5" disabled={pending}>
+          <Button type="submit" size="lg" className="h-11 px-5" disabled={pending} data-testid="core-submit">
             {pending ? 'Creando…' : 'Crear'}
           </Button>
         </div>
         <FormError id="crear-error">{error}</FormError>
+        <p role="status" className="sr-only">{state && 'ok' in state ? 'Grupo creado.' : ''}</p>
       </form>
     </section>
   );

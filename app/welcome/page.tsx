@@ -16,7 +16,7 @@ export const metadata: Metadata = { title: 'Tu nombre' };
 export default function WelcomePage({ searchParams }: { searchParams: SearchParams }) {
   return (
     <main className="mx-auto max-w-sm space-y-6 p-4 pt-8">
-      <Logo />
+      <Logo href="/app" />
       {/* Con Cache Components, la sesión y searchParams solo se leen dentro de un <Suspense>. */}
       <Suspense fallback={null}>
         <WelcomeContent searchParams={searchParams} />

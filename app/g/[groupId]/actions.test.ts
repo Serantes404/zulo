@@ -156,8 +156,8 @@ describe('removeMember', () => {
 
 describe('deleteGroup', () => {
   const rpcs = () => db.calls.filter((c) => c.op === 'rpc');
-  it('un admin con el nombre correcto borra fotos y grupo y vuelve a la portada', async () => {
-    await expect(deleteGroup(G, ' Scouts ')).rejects.toThrow('REDIRECT:/');
+  it('un admin con el nombre correcto borra fotos y grupo y vuelve a /app', async () => {
+    await expect(deleteGroup(G, ' Scouts ')).rejects.toThrow('REDIRECT:/app');
     expect(rpcs()).toMatchObject([{ rpc: 'delete_group', payload: { p_group: G, p_name: 'Scouts' } }]);
   });
   it('un miembro no admin recibe error sin borrar nada', async () => {

@@ -15,7 +15,7 @@ export default function NotFound() {
         title="No encontramos esta página"
         description="Puede que el enlace sea incorrecto o que ya no tengas acceso."
         action={
-          <Link href="/" className={buttonVariants({ size: 'lg' })}>
+          <Link href="/app" className={buttonVariants({ size: 'lg' })}>
             Volver a mis grupos
           </Link>
         }
