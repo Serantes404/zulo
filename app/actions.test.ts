@@ -5,6 +5,8 @@ const G = '0b9c2f1e-5d3a-4c8e-9a7b-1f2e3d4c5b6a';
 let respond: (c: Call) => Result;
 let db: ReturnType<typeof fakeSupabase>;
 
+const revalidatePath = vi.fn();
+vi.mock('next/cache', () => ({ revalidatePath }));
 vi.mock('next/navigation', () => ({
   redirect: vi.fn((url: string) => {
     throw new Error(`REDIRECT:${url}`);
@@ -29,6 +31,7 @@ beforeEach(() => {
 describe('createGroup', () => {
   it('crea el grupo y redirige a él', async () => {
     await expect(createGroup(null, form('Scouts'))).rejects.toThrow(`REDIRECT:/g/${G}`);
+    expect(revalidatePath).toHaveBeenCalledWith('/', 'layout');
   });
   it('GROUP_LIMIT devuelve el mensaje del límite en vez de lanzar', async () => {
     respond = () => ({ error: { message: 'GROUP_LIMIT' } });

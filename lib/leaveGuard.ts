@@ -14,7 +14,7 @@ export function isLeavingNavigation(link: LinkInfo, click: ClickInfo, loc: Loc):
   if (link.target && link.target !== '_self') return false;
   let url: URL;
   try {
-    url = new URL(link.href, loc.origin);
+    url = new URL(link.href, loc.origin + loc.pathname + loc.search);
   } catch {
     return false;
   }
