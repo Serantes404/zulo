@@ -2,10 +2,8 @@
 
 Rediseño completo (17 tareas + revisión final, commits ca42be6..HEAD). Lo que queda, por prioridad.
 
-## Antes de desplegar (Vercel)
-- Repaso manual en el móvil con modo oscuro (iOS y Android): `docs/a11y-checklist.md`, sobre todo los puntos 1-5, 7, 10 y 13 (foco inicial en "Cancelar", foco que vuelve a la zona al cerrar la hoja, enlace "Saltar al contenido").
-- "Mis préstamos" con un usuario que esté en dos grupos: solo deben salir los del grupo actual.
-- Editor del plano en el móvil: arrastrar y redimensionar zonas, asas, "Crear las zonas a mano".
+## Repaso en el móvil (hecho)
+Santi hizo el repaso manual en el móvil (`docs/a11y-checklist.md`) el 2026-10-20.
 
 ## Auditoría de seguridad 2026-10-20 (hecha)
 Migración `20261021090000_security_hardening.sql` aplicada y tests pasados (`security_hardening.sql`, `rls_check.sql`, `rls_extra.sql`, `ai_quota.sql`): Storage 5 MB solo JPEG con rutas estrictas, 500 fotos/día por grupo y DELETE para admins; topes (5 grupos por usuario, 20 almacenes y 2000 materiales por grupo); no se pueden mover almacenes/zonas/material entre grupos; tope global de IA 200/día; fotos de préstamo validadas; el total no baja de lo prestado. En la app: `safeNext` idempotente, `server-only` en Gemini, validación de rutas/cantidades/fechas/ids/roles en el servidor, mensajes neutros en el registro y mensajes claros para los topes.
