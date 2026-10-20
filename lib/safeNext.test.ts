@@ -32,4 +32,37 @@ describe('safeNext', () => {
     expect(safeNext('/g/abc?x=1#h')).toBe('/g/abc?x=1#h');
     expect(safeNext('/join/CODE')).toBe('/join/CODE');
   });
+
+  const malicious = [
+    '/.//evil.com',
+    '/x/..//evil.com',
+    '/%2e//evil.com',
+    '/%2E%2E//evil.com',
+    '/./\\evil.com',
+    '/a/b/../..//evil.com',
+    '/%2e%2e/%2e%2e//evil.com',
+    '/.//evil.com?x=1#h',
+  ];
+  it.each(malicious)('segmentos de punto que acaban en //host: %s → /', (x) => expect(safeNext(x)).toBe('/'));
+
+  const samples = [
+    ...malicious,
+    null,
+    '',
+    '/g/abc',
+    '/g/abc?x=1#h',
+    '/a/../b',
+    '/./g/abc',
+    '/%2e/g',
+    '//evil.com',
+    'https://evil.com',
+    '/ /evil.com',
+    '/join/CODE',
+  ];
+  it.each(samples)('es idempotente: %s', (x) => {
+    const once = safeNext(x);
+    expect(safeNext(once)).toBe(once);
+    expect(once.startsWith('/')).toBe(true);
+    expect(once.startsWith('//') || once.startsWith('/\\')).toBe(false);
+  });
 });
