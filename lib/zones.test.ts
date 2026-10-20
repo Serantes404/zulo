@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { PALETTE, MIN_SIZE, fromDetected, newZone, clampZone, validateZones, type EditableZone } from './zones';
+import { MAX_LABEL } from './ai/normalize';
 
 let n = 0;
 const key = () => `k${++n}`;
@@ -46,4 +47,12 @@ describe('validateZones', () => {
   it('rechaza más de 30 zonas', () => expect(validateZones(Array.from({ length: 31 }, () => base))).toMatch(/30/));
   it('rechaza colores fuera de la paleta', () => expect(validateZones([{ ...base, color: '#000000' }])).toMatch(/Color/));
   it('rechaza posiciones no numéricas', () => expect(validateZones([{ ...base, x: Number.NaN }])).toMatch(/posición/));
+});
+
+describe('fromDetected: etiquetas largas', () => {
+  it('recorta a MAX_LABEL caracteres (validateZones las aceptaría)', () => {
+    const [z] = fromDetected([{ label: 'b'.repeat(250), x: 0, y: 0, w: 0.5, h: 0.5 }], key);
+    expect(z.label).toBe('b'.repeat(MAX_LABEL));
+    expect(validateZones([z])).toBeNull();
+  });
 });

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeZones, MAX_ZONES, type Zone } from './normalize';
+import { normalizeZones, MAX_ZONES, MAX_LABEL, type Zone } from './normalize';
 
 const img = { width: 2000, height: 1000 };
 
@@ -46,5 +46,12 @@ describe('normalizeZones', () => {
       img,
     );
     expect(r.map((z) => z.label)).toEqual(['Zona 1', 'Tiendas', 'Zona 3']);
+  });
+});
+
+describe('normalizeZones: etiquetas largas', () => {
+  it(`recorta la etiqueta a ${MAX_LABEL} caracteres en vez de dejar que falle al guardar`, () => {
+    const [z] = normalizeZones([{ label: ` ${'a'.repeat(300)} `, box: [0, 0, 500, 500] }], 'relative1000', { width: 1, height: 1 });
+    expect(z.label).toBe('a'.repeat(MAX_LABEL));
   });
 });

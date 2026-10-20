@@ -69,6 +69,10 @@ describe('checkoutAction', () => {
     expect(await checkoutAction(ok)).toHaveProperty('error');
     expect(writes()).toEqual([]);
   });
+  it('los errores de zod que no son nuestros no muestran texto en inglés', async () => {
+    expect(await checkoutAction({ ...ok, dueDate: 42 })).toEqual({ error: 'Revisa los datos del formulario.' });
+    expect(await checkoutAction({ ...ok, dueDate: undefined })).toEqual({ error: 'Revisa los datos del formulario.' });
+  });
   it('rechaza fechas inexistentes, pasadas o lejanas y cantidades enormes sin consultar', async () => {
     expect(await checkoutAction({ ...ok, dueDate: '2026-02-31' })).toHaveProperty('error');
     expect(await checkoutAction({ ...ok, dueDate: '2026-10-19' })).toEqual({ error: DUE_DATE_PAST });

@@ -18,7 +18,8 @@ export async function checkoutAction(input: unknown): Promise<ActionResult> {
   const p = checkoutSchema.safeParse(input);
   if (!p.success) {
     // Los errores de la fecha (pasada, inexistente, a más de un año) llevan su propio mensaje.
-    const due = p.error.issues.find((i) => i.path[0] === 'dueDate');
+    // Solo los refine propios (code 'custom') tienen texto en español; el resto de zod va en inglés.
+    const due = p.error.issues.find((i) => i.path[0] === 'dueDate' && i.code === 'custom');
     return { error: due?.message ?? 'Revisa los datos del formulario.' };
   }
   const { itemId, quantity, purpose, dueDate, photoPath } = p.data;

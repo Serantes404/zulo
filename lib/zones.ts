@@ -1,4 +1,4 @@
-import { MAX_ZONES, type Zone } from '@/lib/ai/normalize';
+import { MAX_LABEL, MAX_ZONES, type Zone } from '@/lib/ai/normalize';
 import { uuid } from './uuid';
 
 export const PALETTE = ['#E4572E', '#2E86AB', '#3BB273', '#F2A541', '#8E5DB8', '#D64C8C', '#1B998B', '#6C757D'] as const;
@@ -18,7 +18,7 @@ export type EditableZone = {
 export function fromDetected(zones: Zone[], makeKey: () => string = uuid): EditableZone[] {
   return zones.map((z, i) => ({
     key: makeKey(),
-    label: z.label,
+    label: z.label.slice(0, MAX_LABEL),
     color: PALETTE[i % PALETTE.length],
     x: z.x,
     y: z.y,
@@ -43,7 +43,7 @@ export function validateZones(zones: EditableZone[]): string | null {
   if (zones.length > MAX_ZONES) return `Máximo ${MAX_ZONES} zonas por almacén.`;
   for (const z of zones) {
     if (!z.label.trim()) return 'Todas las zonas necesitan un nombre.';
-    if (z.label.trim().length > 60) return 'Los nombres de zona tienen un máximo de 60 caracteres.';
+    if (z.label.trim().length > MAX_LABEL) return `Los nombres de zona tienen un máximo de ${MAX_LABEL} caracteres.`;
     if (!(PALETTE as readonly string[]).includes(z.color)) return 'Color no válido.';
     if (![z.x, z.y, z.w, z.h].every(Number.isFinite)) return 'Hay una zona con una posición no válida.';
   }
