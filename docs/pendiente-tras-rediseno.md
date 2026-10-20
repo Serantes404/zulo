@@ -9,7 +9,7 @@ Santi hizo el repaso manual en el móvil (`docs/a11y-checklist.md`) el 2026-10-2
 Migración `20261021090000_security_hardening.sql` aplicada y tests pasados (`security_hardening.sql`, `rls_check.sql`, `rls_extra.sql`, `ai_quota.sql`): Storage 5 MB solo JPEG con rutas estrictas, 500 fotos/día por grupo y DELETE para admins; topes (5 grupos por usuario, 20 almacenes y 2000 materiales por grupo); no se pueden mover almacenes/zonas/material entre grupos; tope global de IA 200/día; fotos de préstamo validadas; el total no baja de lo prestado. En la app: `safeNext` idempotente, `server-only` en Gemini, validación de rutas/cantidades/fechas/ids/roles en el servidor, mensajes neutros en el registro y mensajes claros para los topes.
 
 ## Pendiente de Santi (panel de Supabase y Google)
-- Supabase → Authentication: contraseña mínima 8 y revisar Rate Limits (el login sale desde la IP del servidor).
+- ✅ Supabase → Authentication (2026-10-20): contraseña mínima 8; Rate Limits sign-in/sign-up 150 y token refresh 900 por 5 min (el login sale desde la IP del servidor).
 - Decisión de Santi (2026-10-20): sin CAPTCHA. Riesgo aceptado: registros automáticos con cuentas falsas; lo frenan los topes de grupos, fotos e IA.
 - Google AI Studio/Cloud: límite de gasto de la clave de Gemini.
 
