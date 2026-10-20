@@ -8,6 +8,8 @@ import { validatePlanUpdate, MIN_ASPECT, MAX_ASPECT, parseStoredLayout, type Pla
 import { isPlanPath } from '@/lib/planPath';
 import { warehouseInGroup } from '@/lib/ownership';
 import { clampZone, validateZones, type EditableZone } from '@/lib/zones';
+import { BAD_PLAN_ARGS, parsePendingArg, parsePlanUpdateArg, parseZonesArg } from '@/lib/planActionArgs';
+import { isUuid } from '@/lib/schemas';
 
 async function requireAdmin(groupId: string) {
   const ctx = await requireUser();
@@ -17,6 +19,9 @@ async function requireAdmin(groupId: string) {
 
 const NO_PERMISSION = 'No tienes permiso para hacer esto.';
 
+// Los argumentos llegan del cliente sin tipos: primero la forma, luego permisos y reglas.
+const idsOk = (groupId: unknown, warehouseId: unknown) => isUuid(groupId) && isUuid(warehouseId);
+
 // No escribe nada: la imagen y el plano solo se guardan en saveZones.
 export async function previewPlanImage(
   groupId: string,
@@ -25,6 +30,8 @@ export async function previewPlanImage(
   aspectRatio: number,
   source: PlanSource,
 ): Promise<{ url: string } | { error: string }> {
+  if (!idsOk(groupId, warehouseId)) return { error: NO_PERMISSION };
+  if (typeof path !== 'string' || path.length > 200 || typeof aspectRatio !== 'number') return { error: 'Foto no válida.' };
   const { supabase } = await requireAdmin(groupId);
   if (!(await warehouseInGroup(supabase, groupId, warehouseId))) return { error: NO_PERMISSION };
   if (
@@ -45,6 +52,10 @@ export async function detectZonesAction(
   warehouseId: string,
   pending?: { path: string; source: PlanSource },
 ): Promise<DetectResult> {
+  if (!idsOk(groupId, warehouseId)) return { ok: false, reason: 'UNAVAILABLE' };
+  const parsed = parsePendingArg(pending);
+  if (!parsed.ok) return { ok: false, reason: 'NO_ZONES' };
+  pending = parsed.pending;
   const { supabase } = await requireAdmin(groupId);
   if (!(await warehouseInGroup(supabase, groupId, warehouseId))) return { ok: false, reason: 'UNAVAILABLE' };
   let path: string | null | undefined;
@@ -79,7 +90,13 @@ export async function detectZonesAction(
   if (error || !blob) return { ok: false, reason: 'UNAVAILABLE' };
   if (planTooLarge(blob.size)) return { ok: false, reason: 'TOO_LARGE' };
   const buf = Buffer.from(await blob.arrayBuffer());
-  const { width, height } = imageSize(buf);
+  let width: number | undefined;
+  let height: number | undefined;
+  try {
+    ({ width, height } = imageSize(buf)); // lanza si el objeto no es una imagen
+  } catch {
+    return { ok: false, reason: 'UNAVAILABLE' };
+  }
   if (!width || !height) return { ok: false, reason: 'UNAVAILABLE' };
   return detectZonesFromImage(buf.toString('base64'), { width, height }, undefined, source === 'sketch' ? 'sketch' : 'photo');
 }
@@ -90,6 +107,13 @@ export async function saveZones(
   zones: EditableZone[],
   plan?: PlanUpdate,
 ): Promise<{ ok: true } | { error: string }> {
+  if (!idsOk(groupId, warehouseId)) return { error: NO_PERMISSION };
+  const parsedZones = parseZonesArg(zones);
+  if (!parsedZones.ok) return { error: parsedZones.error };
+  const parsedPlan = parsePlanUpdateArg(plan);
+  if (!parsedPlan.ok) return { error: BAD_PLAN_ARGS };
+  zones = parsedZones.zones;
+  plan = parsedPlan.plan;
   const invalid = validateZones(zones);
   if (invalid) return { error: invalid };
   if (plan) {
