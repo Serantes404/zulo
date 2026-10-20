@@ -80,7 +80,13 @@ type Props = {
   initialZones: EditableZone[];
 };
 
-export function PlanEditorClient({
+// Next guarda hasta 3 rutas ocultas con su estado: al volver con un enlace o router.push (guardar,
+// "Editar plano") el editor debe empezar de cero con los datos nuevos; con atrás/adelante se conserva.
+export function PlanEditorClient(props: Props) {
+  return <PlanEditor key={useRouter().bfcacheId} {...props} />;
+}
+
+function PlanEditor({
   groupId,
   warehouseId,
   name,
@@ -128,7 +134,7 @@ export function PlanEditorClient({
   const sel = zones.find((z) => z.key === selected);
   const elapsed = Math.max(0, Math.round((now - detectStartedAt) / 1000));
 
-  // Cambios sin guardar: avisa al recargar/cerrar y al pulsar enlaces de fuera del editor (cabecera, atrás).
+  // Cambios sin guardar: avisa al recargar/cerrar y al pulsar enlaces de fuera del editor (cabecera, menús). El botón Atrás del navegador no se intercepta.
   useEffect(() => {
     if (!dirty) return;
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -302,15 +308,16 @@ export function PlanEditorClient({
       const r = await saveZones(groupId, warehouseId, zones, pending || layout ? { layout, aspectRatio: aspect, image: pending ?? undefined } : undefined);
       if ('error' in r) {
         setError(r.error);
+        setSaving(false);
         return;
       }
       toast({ title: 'Plano guardado' });
+      // `saving` sigue activo hasta que se navega: evita guardar dos veces.
       router.push(`/g/${groupId}/w/${warehouseId}`);
     } catch (err) {
       unstable_rethrow(err);
       console.error('saveZones', err);
       setError(GENERIC_ERROR);
-    } finally {
       setSaving(false);
     }
   }

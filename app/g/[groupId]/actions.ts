@@ -68,8 +68,9 @@ export async function removeMember(groupId: string, userId: string): Promise<Rem
   if (targetRole !== 'admin' && targetRole !== 'member') return { error: NO_PERMISSION };
   if (targetRole === 'admin') {
     // Nunca dejar el grupo sin admins (el que llama es admin y no puede echarse a sí mismo, pero se comprueba).
-    const { data: admins } = await supabase.from('group_members').select('user_id').eq('group_id', groupId).eq('role', 'admin');
-    if (!(admins ?? []).some((a) => a.user_id !== userId)) return { error: 'El grupo necesita al menos un admin.' };
+    const { data: admins, error: adminsError } = await supabase.from('group_members').select('user_id').eq('group_id', groupId).eq('role', 'admin');
+    if (adminsError || !admins) return { error: 'No se ha podido echar a este miembro.' };
+    if (!admins.some((a) => a.user_id !== userId)) return { error: 'El grupo necesita al menos un admin.' };
   }
   const { data, error } = await supabase
     .from('group_members')

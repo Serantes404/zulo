@@ -68,7 +68,7 @@ export function MemberMenu({ groupId, userId, name, activeLoans = 0, canRemove =
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={onClick}>Hacer admin</AlertDialogAction>
+            <AlertDialogAction variant="default" onClick={onClick}>Hacer admin</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -1,10 +1,23 @@
+export const CREATE_GROUP_INPUT_ID = 'crear-nombre';
+
+/**
+ * Input del formulario "Crear un grupo nuevo" si la portada es la ruta visible.
+ * Con cacheComponents, Next oculta las rutas visitadas (Activity, display:none) sin quitarlas del DOM:
+ * fuera de `/` el input puede existir pero estar oculto.
+ */
+function visibleInput(): HTMLInputElement | null {
+  if (location.pathname !== '/') return null;
+  const input = document.getElementById(CREATE_GROUP_INPUT_ID);
+  return input instanceof HTMLInputElement && input.offsetParent !== null ? input : null;
+}
+
 /**
  * Lleva al usuario al formulario "Crear un grupo nuevo" de la portada y enfoca su campo.
- * Devuelve false si el formulario aún no está en el DOM (p. ej. venimos de otra página).
+ * Devuelve false si el formulario no está visible (p. ej. venimos de otra página).
  */
 export function focusCreateGroup(): boolean {
-  const input = document.getElementById('name');
-  if (!(input instanceof HTMLInputElement)) return false;
+  const input = visibleInput();
+  if (!input) return false;
   const run = () => {
     input.scrollIntoView({ block: 'center', behavior: 'smooth' });
     input.focus({ preventScroll: true });
@@ -17,10 +30,10 @@ export function focusCreateGroup(): boolean {
   return true;
 }
 
-/** onClick para los enlaces "Crear grupo" (`/#crear`): si el formulario ya está, enfoca sin navegar. */
+/** onClick para los enlaces "Crear grupo" (`/#crear`): si el formulario ya está a la vista, enfoca sin navegar. */
 export function onCreateGroupClick(e: { preventDefault: () => void; metaKey: boolean; ctrlKey: boolean; shiftKey: boolean; altKey: boolean }) {
   if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-  if (!document.getElementById('name')) return;
+  if (!visibleInput()) return;
   e.preventDefault();
   history.replaceState(null, '', '/#crear');
   focusCreateGroup();

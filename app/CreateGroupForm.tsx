@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { FormError } from '@/components/FormError';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { focusCreateGroup } from '@/lib/focusCreateGroup';
+import { CREATE_GROUP_INPUT_ID, focusCreateGroup } from '@/lib/focusCreateGroup';
 import { createGroup } from './actions';
 
 export function CreateGroupForm({ hasGroups }: { hasGroups: boolean }) {
@@ -28,10 +28,10 @@ export function CreateGroupForm({ hasGroups }: { hasGroups: boolean }) {
         </div>
       )}
       <form action={formAction} className="space-y-2">
-        <Label htmlFor="name" id="crear-title">Crear un grupo nuevo</Label>
+        <Label htmlFor={CREATE_GROUP_INPUT_ID} id="crear-title">Crear un grupo nuevo</Label>
         <div className="flex gap-2">
           <Input
-            id="name"
+            id={CREATE_GROUP_INPUT_ID}
             name="name"
             required
             maxLength={80}
