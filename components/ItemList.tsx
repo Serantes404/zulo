@@ -1,54 +1,69 @@
 'use client';
 import Link from 'next/link';
-import { availabilityLabel, type ItemWithAvail } from '@/lib/availability';
-import { createItem } from '@/app/g/[groupId]/w/[whId]/actions';
+import { ChevronRight, ImageOff, PackageOpen } from 'lucide-react';
+import { availabilityLabel } from '@/lib/availability';
+import type { ItemWithPhoto } from '@/lib/itemPhotos';
+import { AddItemDialog } from '@/components/AddItemDialog';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { EmptyState } from '@/components/EmptyState';
+import { cn } from 'cn';
 
 type Props = {
   zone: { id: string; label: string };
-  items: ItemWithAvail[];
+  items: ItemWithPhoto[];
   isAdmin: boolean;
   groupId: string;
   warehouseId: string;
+  /** Material a resaltar (viene de tocar un resultado de búsqueda). */
+  highlightId?: string | null;
 };
 
-export function ItemList({ zone, items, isAdmin, groupId, warehouseId }: Props) {
+function Thumb({ url }: { url: string | null }) {
   return (
-    <section aria-labelledby="zone-title" className="space-y-3 rounded-lg border p-4">
-      <h2 id="zone-title" className="text-lg font-semibold">{zone.label}</h2>
-      {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No hay material en esta zona.</p>
+    <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted">
+      {url ? (
+        // Nombre del material en texto adyacente: la imagen es decorativa.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={url} alt="" loading="lazy" decoding="async" className="size-full object-cover" />
       ) : (
-        <ul className="divide-y">
+        <ImageOff aria-hidden="true" className="size-6 text-muted-foreground" />
+      )}
+    </div>
+  );
+}
+
+export function ItemList({ zone, items, isAdmin, groupId, warehouseId, highlightId }: Props) {
+  return (
+    <div className="space-y-3">
+      {items.length === 0 ? (
+        <EmptyState icon={PackageOpen} title="Zona sin material" description={isAdmin ? 'Añade el primer material de esta zona.' : 'Aún no hay material en esta zona.'} />
+      ) : (
+        <ul className="divide-y rounded-lg border">
           {items.map((i) => (
             <li key={i.id}>
-              <Link href={`/item/${i.id}`} className="flex items-center justify-between gap-2 py-2 hover:bg-muted">
-                <span>{i.name}</span>
-                <span className="text-sm">
-                  {availabilityLabel(i)}
-                  {i.overdue && <Badge className="ml-2 bg-red-700 text-white">Vencido</Badge>}
+              <Link
+                href={`/item/${i.id}`}
+                data-highlight={highlightId === i.id ? 'true' : undefined}
+                className={cn(
+                  'flex min-h-[76px] items-center gap-3 p-2 outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring',
+                  highlightId === i.id && 'bg-muted ring-2 ring-signal ring-inset',
+                )}
+              >
+                <Thumb url={i.photoUrl} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-medium">{i.name}</span>
+                  <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+                    {availabilityLabel(i)}
+                    {i.overdue && <Badge variant="danger">Vencido</Badge>}
+                  </span>
                 </span>
+                <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
               </Link>
             </li>
           ))}
         </ul>
       )}
-      {isAdmin && (
-        <form action={createItem.bind(null, groupId, warehouseId, zone.id)} className="grid gap-2 border-t pt-3">
-          <p className="text-sm font-medium">Añadir material a {zone.label}</p>
-          <Label htmlFor="item-name">Nombre</Label>
-          <Input id="item-name" name="name" required maxLength={80} placeholder="Linternas" />
-          <Label htmlFor="item-qty">Cantidad</Label>
-          <Input id="item-qty" name="quantity" type="number" min={1} defaultValue={1} required />
-          <Label htmlFor="item-notes">Notas (opcional)</Label>
-          <Textarea id="item-notes" name="notes" maxLength={500} />
-          <Button type="submit">Añadir</Button>
-        </form>
-      )}
-    </section>
+      {isAdmin && <AddItemDialog zone={zone} groupId={groupId} warehouseId={warehouseId} />}
+    </div>
   );
 }

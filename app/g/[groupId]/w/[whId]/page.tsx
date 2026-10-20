@@ -5,6 +5,11 @@ import { notFound } from 'next/navigation';
 import { requireUser, getRole } from '@/lib/auth';
 import { signedUrls } from '@/lib/signed';
 import { mergeAvailability } from '@/lib/availability';
+import { attachPhotoUrls, photoPaths } from '@/lib/itemPhotos';
+import { EmptyState } from '@/components/EmptyState';
+import { WarehouseSwitcher } from '@/components/WarehouseSwitcher';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, Map as MapIcon, Pencil } from 'lucide-react';
 import { PlanView } from '@/components/PlanView';
 import { DEFAULT_LAYOUT, parseStoredLayout } from '@/lib/layout';
 
@@ -41,31 +46,47 @@ async function Warehouse({ params }: { params: Params }) {
     .order('created_at');
   const zoneIds = (zones ?? []).map((z) => z.id);
 
-  const [{ data: items }, { data: avail }] = await Promise.all([
+  const [{ data: items }, { data: avail }, { data: warehouses }] = await Promise.all([
     supabase.from('items').select('id, name, zone_id, quantity_total, notes, photo_path').in('zone_id', zoneIds).order('name'),
     supabase.from('item_availability').select('item_id, quantity_out, quantity_available, has_overdue').in('zone_id', zoneIds),
+    supabase.from('warehouses').select('id, name').eq('group_id', groupId).order('created_at'),
   ]);
-  const urls = await signedUrls(supabase, wh.plan_image_path ? [wh.plan_image_path] : []);
+  // Una sola llamada firma el plano y todas las fotos del almacén (Storage RLS ya limita al grupo).
+  const urls = await signedUrls(supabase, [...(wh.plan_image_path ? [wh.plan_image_path] : []), ...photoPaths(items ?? [])]);
+  const planItems = attachPhotoUrls(mergeAvailability(items ?? [], avail ?? []), urls);
+  const editHref = `/g/${groupId}/w/${whId}/edit`;
 
   return (
-    <main className="mx-auto max-w-3xl space-y-4 p-4">
-      <Link href={`/g/${groupId}`} className="text-sm underline">← Volver al grupo</Link>
-      <div className="flex items-center justify-between gap-2">
-        <h1 className="text-2xl font-semibold">{wh.name}</h1>
-        {isAdmin && <Link href={`/g/${groupId}/w/${whId}/edit`} className="text-sm underline">Editar plano</Link>}
+    <main className="mx-auto max-w-3xl space-y-2 px-4 pb-6 lg:max-w-5xl">
+      <div className="flex items-center gap-1 pt-2">
+        <Link
+          href={`/g/${groupId}`}
+          className="inline-flex size-11 shrink-0 items-center justify-center rounded-md outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring md:size-10"
+        >
+          <ChevronLeft aria-hidden="true" className="size-6" />
+          <span className="sr-only">Volver al grupo</span>
+        </Link>
+        <WarehouseSwitcher groupId={groupId} current={{ id: wh.id, name: wh.name }} warehouses={warehouses ?? []} />
+        {isAdmin && zoneIds.length > 0 && (
+          <Button variant="ghost" size="sm" className="ml-auto" nativeButton={false} render={<Link href={editHref} />}>
+            <Pencil aria-hidden="true" /> Editar
+          </Button>
+        )}
       </div>
       {zoneIds.length === 0 ? (
-        <p className="text-muted-foreground">
-          Este almacén aún no tiene plano.{' '}
-          {isAdmin ? <Link href={`/g/${groupId}/w/${whId}/edit`} className="underline">Crearlo ahora</Link> : 'Pide a un admin que lo cree.'}
-        </p>
+        <EmptyState
+          icon={MapIcon}
+          title="Almacén sin plano"
+          description={isAdmin ? 'Dibuja el plano y marca las zonas para empezar a guardar material.' : 'Pide a un admin que cree el plano.'}
+          action={isAdmin ? <Button nativeButton={false} render={<Link href={editHref} />}>Crear el plano</Button> : undefined}
+        />
       ) : (
         <PlanView
           imageUrl={wh.plan_image_path ? urls[wh.plan_image_path] ?? null : null}
           layout={wh.plan_source === 'sketch' ? parseStoredLayout(wh.layout) ?? DEFAULT_LAYOUT : null}
           aspectRatio={Number(wh.aspect_ratio)}
           zones={(zones ?? []).map((z) => ({ ...z, x: Number(z.x), y: Number(z.y), w: Number(z.w), h: Number(z.h) }))}
-          items={mergeAvailability(items ?? [], avail ?? [])}
+          items={planItems}
           isAdmin={isAdmin}
           groupId={groupId}
           warehouseId={whId}
