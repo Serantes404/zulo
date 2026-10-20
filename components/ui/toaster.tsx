@@ -54,6 +54,7 @@ export function Toaster({ children }: { children?: React.ReactNode }) {
     <Toast.Provider timeout={TOAST_DURATION_MS} limit={3}>
       {children}
       <Toast.Viewport
+        aria-label="Notificaciones"
         className={cn(
           "pointer-events-none fixed z-50 flex flex-col gap-2 outline-none",
           // Móvil: centrado, encima de la barra inferior (64 px) y del safe area.
