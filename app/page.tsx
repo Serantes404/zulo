@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { buttonVariants } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { CreateGroupForm } from './CreateGroupForm';
+import { CreateGroupLink } from './CreateGroupLink';
 
 // Colores de la paleta de zonas (decorativos), elegidos por hash del id del grupo.
 const AVATAR_TINTS = [
@@ -55,9 +56,9 @@ async function MyGroups() {
           title="Aún no estás en ningún grupo"
           description="Crea el de tu club o pide el link a tu monitor."
           action={
-            <Link href="#crear" className={buttonVariants({ size: 'lg' })}>
+            <CreateGroupLink className={buttonVariants({ size: 'lg' })}>
               Crear grupo
-            </Link>
+            </CreateGroupLink>
           }
         />
         <CreateGroupForm hasGroups={false} />
@@ -91,13 +92,10 @@ async function MyGroups() {
           ) : null,
         )}
         <li className="hidden md:flex">
-          <Link
-            href="#crear"
-            className="flex min-h-[72px] flex-1 items-center justify-center gap-2 rounded-lg border border-dashed p-3 font-medium text-muted-foreground transition-colors hover:bg-muted outline-none focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-          >
+          <CreateGroupLink className="flex min-h-[72px] flex-1 items-center justify-center gap-2 rounded-lg border border-dashed p-3 font-medium text-muted-foreground transition-colors hover:bg-muted outline-none focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
             <Plus className="size-5" aria-hidden="true" />
             Crear grupo
-          </Link>
+          </CreateGroupLink>
         </li>
       </ul>
       <CreateGroupForm hasGroups />

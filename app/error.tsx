@@ -5,7 +5,7 @@ import { MapPinOff } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { EmptyState } from '@/components/EmptyState';
 
-export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function ErrorPage({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -18,7 +18,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
         description="No hemos podido cargar esta página. Inténtalo de nuevo."
         action={
           <div className="flex flex-wrap justify-center gap-2">
-            <Button size="lg" onClick={() => reset()}>
+            <Button size="lg" onClick={() => retry()}>
               Reintentar
             </Button>
             <Link href="/" className={buttonVariants({ size: 'lg', variant: 'outline' })}>

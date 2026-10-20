@@ -1,4 +1,5 @@
 'use server';
+import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { requireUser } from '@/lib/auth';
@@ -19,5 +20,6 @@ export async function createGroup(_prev: CreateGroupState, formData: FormData): 
   const { supabase } = await requireUser();
   const { data, error } = await supabase.rpc('create_group', { p_name: name });
   if (error || !data) return { error: rpcErrorMessage(error?.message, 'No se ha podido crear el grupo.') };
+  revalidatePath('/', 'layout'); // la cabecera (GroupSwitcher) debe mostrar el grupo nuevo
   redirect(`/g/${data}`);
 }

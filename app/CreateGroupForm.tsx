@@ -1,15 +1,25 @@
 'use client';
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { FormError } from '@/components/FormError';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { focusCreateGroup } from '@/lib/focusCreateGroup';
 import { createGroup } from './actions';
 
 export function CreateGroupForm({ hasGroups }: { hasGroups: boolean }) {
   // Si va bien, createGroup redirige al grupo; si no (p. ej. límite de grupos), devuelve el error.
   const [state, formAction, pending] = useActionState(createGroup, null);
   const error = state?.error;
+  // Al llegar con #crear (desde otra página o con otro hash) enfoca el campo una vez montado el formulario.
+  useEffect(() => {
+    const check = () => {
+      if (location.hash === '#crear') focusCreateGroup();
+    };
+    check();
+    window.addEventListener('hashchange', check);
+    return () => window.removeEventListener('hashchange', check);
+  }, []);
   return (
     <section id="crear" aria-labelledby="crear-title" className="scroll-mt-20 space-y-3">
       {hasGroups && (
