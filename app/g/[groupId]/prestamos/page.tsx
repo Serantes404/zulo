@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { ListSkeleton } from '@/components/skeletons';
@@ -6,6 +7,8 @@ import { attachCardPhotos, fetchActiveLoans, fetchReturnedLoans } from '@/lib/my
 import { LoansTabs } from './LoansTabs';
 
 type Params = Promise<{ groupId: string }>;
+
+export const metadata: Metadata = { title: 'Mis préstamos' };
 
 export default function LoansPage({ params }: { params: Params }) {
   return (

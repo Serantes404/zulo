@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { requireUser } from '@/lib/auth';
 import { safeNext } from '@/lib/safeNext';
@@ -9,6 +10,8 @@ import { Label } from '@/components/ui/label';
 import { saveName } from './actions';
 
 type SearchParams = Promise<{ next?: string }>;
+
+export const metadata: Metadata = { title: 'Tu nombre' };
 
 export default function WelcomePage({ searchParams }: { searchParams: SearchParams }) {
   return (

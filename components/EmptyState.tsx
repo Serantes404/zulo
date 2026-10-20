@@ -3,7 +3,7 @@ import type { LucideIcon } from "lucide-react"
 type EmptyStateProps = {
   icon: LucideIcon
   title: string
-  description?: string
+  description?: React.ReactNode
   action?: React.ReactNode
   /** Nivel del título: h1 en páginas de error/404 que no tienen otro h1. */
   as?: 'h1' | 'h2'

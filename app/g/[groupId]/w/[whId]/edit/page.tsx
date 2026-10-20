@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { WarehouseSkeleton } from '@/components/skeletons';
 import { notFound } from 'next/navigation';
@@ -9,6 +10,8 @@ import { PlanEditorClient } from './PlanEditorClient';
 export const maxDuration = 60;
 
 type Params = Promise<{ groupId: string; whId: string }>;
+
+export const metadata: Metadata = { title: 'Editar plano' };
 
 export default function EditPlanPage({ params }: { params: Params }) {
   return (

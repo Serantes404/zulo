@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { WarehouseSkeleton } from '@/components/skeletons';
 import Link from 'next/link';
@@ -14,6 +15,8 @@ import { PlanView } from '@/components/PlanView';
 import { DEFAULT_LAYOUT, parseStoredLayout } from '@/lib/layout';
 
 type Params = Promise<{ groupId: string; whId: string }>;
+
+export const metadata: Metadata = { title: 'Almacén' };
 
 export default function WarehousePage({ params }: { params: Params }) {
   return (
@@ -58,10 +61,11 @@ async function Warehouse({ params }: { params: Params }) {
 
   return (
     <main className="mx-auto max-w-3xl space-y-2 px-4 pb-6 lg:max-w-5xl">
+      <h1 className="sr-only">{wh.name}</h1>
       <div className="flex items-center gap-1 pt-2">
         <Link
           href={`/g/${groupId}`}
-          className="inline-flex size-11 shrink-0 items-center justify-center rounded-md outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring md:size-10"
+          className="inline-flex size-11 shrink-0 items-center justify-center rounded-md outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background md:size-10"
         >
           <ChevronLeft aria-hidden="true" className="size-6" />
           <span className="sr-only">Volver al grupo</span>

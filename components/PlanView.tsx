@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react';
-import { ChevronRight, SearchX, Search, X } from 'lucide-react';
+import { ChevronRight, Clock, SearchX, TriangleAlert, Search, X } from 'lucide-react';
 import { availabilityLabel, searchItems, zoneStatus } from '@/lib/availability';
 import type { ItemWithPhoto } from '@/lib/itemPhotos';
 import { zoneMark } from '@/lib/zoneStyle';
@@ -197,8 +197,14 @@ export function PlanView({ imageUrl, aspectRatio, layout, zones, items, isAdmin,
 
       <div className="space-y-3 lg:col-start-1 lg:row-span-2 lg:row-start-1">
         {plan}
-        <p className="font-mono text-xs uppercase tracking-[0.12em] text-muted-foreground">
-          Leyenda: reloj = prestado · triángulo = vencido
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs uppercase tracking-[0.12em] text-muted-foreground">
+          <span>Leyenda:</span>
+          <span className="inline-flex items-center gap-1">
+            <Clock aria-hidden="true" className="size-3.5" /> prestado
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <TriangleAlert aria-hidden="true" className="size-3.5" /> vencido
+          </span>
         </p>
         <p className="text-sm text-muted-foreground lg:hidden">Toca una zona para ver su material.</p>
       </div>

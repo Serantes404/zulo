@@ -112,7 +112,7 @@
   --plan-paper: #fafaf7;
   --plan-grid: #eceae4;
   --plan-ink: #1f2330;
-  --plan-line: #b8b4aa;
+  --plan-line: #959189;
   --plan-label: #6e6a60;
   --success: #dcfce7;
   --success-foreground: #14532d;
@@ -286,7 +286,7 @@
 }
 
 /* Editor del plano, paso IA: línea de escaneo cobalto sobre el boceto (solo pantalla).
-   Con reduced-motion se oculta y se ve un spinner estático con "Detectando… N s". */
+   Con reduced-motion queda una línea estática (sin animación) junto al spinner estático con "Detectando… N s". */
 .plan-scan {
   position: absolute;
   inset-inline: 0;
@@ -301,5 +301,5 @@
   to { top: calc(100% - 2px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .plan-scan { display: none; }
+  .plan-scan { animation: none; top: 50%; }
 }

@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { Unlink, Users } from 'lucide-react';
@@ -11,6 +12,8 @@ type Props = {
   params: Promise<{ code: string }>;
   searchParams: Promise<{ error?: string }>;
 };
+
+export const metadata: Metadata = { title: 'Unirse al grupo' };
 
 export default function JoinPage(props: Props) {
   return (
@@ -30,19 +33,21 @@ async function JoinForm({ params, searchParams }: Props) {
   await requireUser();
   if (error) {
     return (
-      <div role="alert">
-        <EmptyState
-          as="h1"
-          icon={Unlink}
-          title="Link no válido"
-          description="Este link no es válido o ha caducado. Pide uno nuevo a un admin del grupo."
-          action={
-            <Link href="/" className={buttonVariants({ size: 'lg' })}>
-              Ir a mis grupos
-            </Link>
-          }
-        />
-      </div>
+      <EmptyState
+        as="h1"
+        icon={Unlink}
+        title="Link no válido"
+        description={
+          <span role="alert">
+            Este link no es válido o ha caducado. Pide uno nuevo a un admin del grupo.
+          </span>
+        }
+        action={
+          <Link href="/" className={buttonVariants({ size: 'lg' })}>
+            Ir a mis grupos
+          </Link>
+        }
+      />
     );
   }
   return (

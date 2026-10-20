@@ -7,11 +7,13 @@ import { cn } from "cn"
 import { Button } from "@/components/ui/button"
 
 const TOAST_DURATION_MS = 4000
+// WCAG 2.2.1: los errores se leen más despacio.
+const ERROR_TOAST_DURATION_MS = 8000
 
 type ToastOptions = {
   title: string
   description?: string
-  /** "error" usa role="alert"; el resto, role="status". */
+  /** Todos se anuncian con role="status" (el viewport ya es una región aria-live). "error" dura 8 s en vez de 4 s. */
   variant?: "default" | "error"
 }
 
@@ -23,7 +25,7 @@ function ToastList() {
       <Toast.Root
         key={toast.id}
         toast={toast}
-        role={isError ? "alert" : "status"}
+        role="status"
         className={cn(
           "pointer-events-auto flex w-full items-center gap-2 rounded-lg border bg-popover py-2 pr-2 pl-4 text-popover-foreground shadow-md",
           "transition-[opacity,translate] duration-(--dur-slow) ease-(--ease-zulo)",
@@ -74,7 +76,12 @@ export function useToast() {
   const { add } = Toast.useToastManager()
   return React.useCallback(
     ({ title, description, variant = "default" }: ToastOptions) =>
-      add({ title, description, data: { variant } }),
+      add({
+        title,
+        description,
+        data: { variant },
+        timeout: variant === "error" ? ERROR_TOAST_DURATION_MS : TOAST_DURATION_MS,
+      }),
     [add]
   )
 }

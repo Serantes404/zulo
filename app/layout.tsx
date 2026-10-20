@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Zulo",
+  title: { default: "Zulo", template: "%s · Zulo" },
   description: "Inventario visual para clubs",
 };
 

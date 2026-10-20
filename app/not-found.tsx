@@ -1,7 +1,10 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { MapPinOff } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import { EmptyState } from '@/components/EmptyState';
+
+export const metadata: Metadata = { title: 'No encontrado' };
 
 export default function NotFound() {
   return (

@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { DetailSkeleton } from '@/components/skeletons';
 import Link from 'next/link';
@@ -14,6 +15,8 @@ type Params = Promise<{ loanId: string }>;
 
 const fmt = (d: string) =>
   new Date(d).toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Europe/Madrid' });
+
+export const metadata: Metadata = { title: 'Préstamo' };
 
 export default function LoanPage({ params }: { params: Params }) {
   return (

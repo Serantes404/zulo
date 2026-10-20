@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { safeNext } from '@/lib/safeNext';
 import { Logo } from '@/components/Logo';
@@ -5,6 +6,8 @@ import { LoginForm } from './LoginForm';
 import { PlanArt } from './PlanArt';
 
 type SearchParams = Promise<{ next?: string }>;
+
+export const metadata: Metadata = { title: 'Entrar' };
 
 export default function LoginPage({ searchParams }: { searchParams: SearchParams }) {
   return (

@@ -60,7 +60,7 @@ function DialogContent({
               <Button
                 variant="ghost"
                 size="icon-lg"
-                className="absolute top-2 right-2"
+                className="absolute top-2 right-2 after:absolute after:-inset-1 after:content-['']"
               />
             }
           >

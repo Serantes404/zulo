@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { GroupSkeleton } from '@/components/skeletons';
 import Link from 'next/link';
@@ -23,6 +24,8 @@ const overline = 'text-xs font-medium uppercase tracking-wider text-muted-foregr
 function formatDue(due: string): string {
   return new Date(`${due}T00:00:00Z`).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', timeZone: 'UTC' });
 }
+
+export const metadata: Metadata = { title: 'Grupo' };
 
 export default function GroupPage({ params }: { params: Params }) {
   return (
@@ -108,13 +111,13 @@ async function GroupContent({ params }: { params: Params }) {
         <section aria-labelledby="prestamos-title" className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 id="prestamos-title" className={overline}>Mis préstamos</h2>
-            <Link href={`/g/${groupId}/prestamos`} className="text-sm text-primary underline-offset-4 hover:underline">Ver todo</Link>
+            <Link href={`/g/${groupId}/prestamos`} className="inline-flex min-h-11 items-center rounded-md text-sm text-primary underline-offset-4 hover:underline outline-none focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">Ver todo</Link>
           </div>
           {myLoans && myLoans.length > 0 ? (
             <ul className="divide-y rounded-xl border bg-card">
               {myLoans.map((l) => (
                 <li key={l.id}>
-                  <Link href={`/item/${l.items.id}`} className="flex min-h-11 items-center justify-between gap-2 p-3 hover:bg-muted/50">
+                  <Link href={`/item/${l.items.id}`} className="flex min-h-11 items-center justify-between gap-2 p-3 hover:bg-muted/50 outline-none focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
                     <span className="min-w-0 truncate">{l.items.name} ×{l.quantity}</span>
                     {isOverdue(l.due_date) ? (
                       <Badge variant="danger">Vencido · {formatDue(l.due_date)}</Badge>

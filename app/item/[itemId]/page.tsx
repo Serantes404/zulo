@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { DetailSkeleton } from '@/components/skeletons';
 import Link from 'next/link';
@@ -19,6 +20,8 @@ import { TakeBar } from './TakeBar';
 
 type Params = Promise<{ itemId: string }>;
 type SearchParams = Promise<{ devolver?: string | string[] }>;
+
+export const metadata: Metadata = { title: 'Material' };
 
 export default function ItemPage({ params, searchParams }: { params: Params; searchParams: SearchParams }) {
   return (

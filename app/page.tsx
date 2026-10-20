@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { ListSkeleton } from '@/components/skeletons';
 import Link from 'next/link';
@@ -25,6 +26,8 @@ function tintFor(id: string): string {
   for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
   return AVATAR_TINTS[h % AVATAR_TINTS.length];
 }
+
+export const metadata: Metadata = { title: 'Mis grupos' };
 
 export default function Home() {
   return (
