@@ -5,7 +5,7 @@ import { detectZonesFromImage } from '../lib/ai/detectZones';
 async function main() {
   const [file, mode = 'photo'] = process.argv.slice(2);
   if (!file) {
-    console.error('Uso: npx tsx --env-file=.env.local scripts/try-detect.ts <foto.jpg> [photo|sketch]');
+    console.error('Uso: npx tsx --tsconfig scripts/tsconfig.json --env-file=.env.local scripts/try-detect.ts <foto.jpg> [photo|sketch]');
     process.exit(1);
   }
   const buf = readFileSync(file);

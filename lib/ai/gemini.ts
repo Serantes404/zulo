@@ -1,3 +1,5 @@
+import 'server-only';
+// Lee GEMINI_API_KEY: nunca debe acabar en un bundle de cliente.
 // Gemini devuelve las cajas como box_2d = [ymin, xmin, ymax, xmax] en escala 0-1000 (su formato nativo).
 // Aquí se reordenan a box = [x1, y1, x2, y2] para el resto de la app (AI_BOX_FORMAT=relative1000).
 export const PROMPT = `You are looking at a photo or a hand-drawn sketch of a storage room or shelving unit.

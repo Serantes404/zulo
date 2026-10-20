@@ -1,3 +1,5 @@
+import 'server-only';
+// Llama a Gemini (gemini.ts) y lee AI_BOX_FORMAT: solo servidor.
 import { callVisionModel, type VisionMode } from './gemini';
 import { normalizeZones, type BoxFormat, type Zone } from './normalize';
 import { normalizeSketch } from './layout';
