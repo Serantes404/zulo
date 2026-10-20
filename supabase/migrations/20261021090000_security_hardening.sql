@@ -1,7 +1,8 @@
 -- Endurecimiento de seguridad antes de Vercel (auditoría del 2026-10-20, informe b-base-de-datos.md).
 -- 1. B-H1/C-M4  Storage: bucket photos con 5 MB y solo image/jpeg; subidas solo con rutas
 --               <grupo>/<plans|items|loans>/<uuid>.jpg; plans/ e items/ solo admins, loans/ miembros;
---               como mucho 200 fotos nuevas por grupo cada 24 h; DELETE para admins del grupo.
+--               como mucho 500 fotos nuevas por grupo cada 24 h (un club grande con ~100
+--               préstamos al día sube 2 fotos por préstamo); DELETE para admins del grupo.
 -- 2. B-L7       Topes holgados para un club: 5 grupos creados por usuario (GROUP_LIMIT),
 --               20 almacenes por grupo (WAREHOUSE_LIMIT) y 2000 materiales por grupo (ITEM_LIMIT).
 -- 3. B-M1       No se pueden mover filas entre grupos: UPDATE por columna en warehouses, zones e
@@ -20,14 +21,14 @@ update storage.buckets
   set file_size_limit = 5242880, allowed_mime_types = array['image/jpeg']
   where id = 'photos';
 
--- true si el usuario es miembro del grupo y el grupo ha subido menos de 200 fotos en 24 h.
+-- true si el usuario es miembro del grupo y el grupo ha subido menos de 500 fotos en 24 h.
 create or replace function public.photos_quota_ok(g uuid) returns boolean
 language sql stable security definer set search_path = '' as $$
   select public.is_member(g)
     and (select count(*) from storage.objects o
           where o.bucket_id = 'photos'
             and o.name like g::text || '/%'
-            and o.created_at > now() - interval '24 hours') < 200;
+            and o.created_at > now() - interval '24 hours') < 500;
 $$;
 revoke execute on function public.photos_quota_ok(uuid) from public, anon;
 grant execute on function public.photos_quota_ok(uuid) to authenticated;

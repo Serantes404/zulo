@@ -215,17 +215,19 @@ begin
   get diagnostics v_n = row_count;
   if v_n <> 1 then raise exception 'FALLO: el admin no puede borrar fotos de su grupo (%)', v_n; end if;
 
-  -- Tope diario de 200 fotos por grupo.
+  -- Tope diario de 500 fotos por grupo: se llega a 499 con un solo insert; luego la 500 pasa
+  -- y la 501 falla (sentencias sueltas, para que la política cuente las fotos anteriores).
   reset role;
   select count(*) into v_n from storage.objects
     where bucket_id = 'photos' and name like v_g::text || '/%';
   perform set_config('role', 'authenticated', true);
-  for i in 1..(200 - v_n) loop
-    insert into storage.objects (bucket_id, name) values ('photos', v_g::text || '/loans/' || gen_random_uuid()::text || '.jpg');
-  end loop;
+  insert into storage.objects (bucket_id, name)
+    select 'photos', v_g::text || '/loans/' || gen_random_uuid()::text || '.jpg'
+    from generate_series(1, 499 - v_n);
+  insert into storage.objects (bucket_id, name) values ('photos', v_g::text || '/loans/' || gen_random_uuid()::text || '.jpg');
   begin
     insert into storage.objects (bucket_id, name) values ('photos', v_g::text || '/loans/' || gen_random_uuid()::text || '.jpg');
-    raise exception 'FALLO: más de 200 fotos al día en un grupo';
+    raise exception 'FALLO: más de 500 fotos al día en un grupo';
   exception when others then
     if sqlerrm not like 'new row violates row-level security policy%' then raise; end if;
   end;
