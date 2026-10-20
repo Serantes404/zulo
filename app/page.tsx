@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { ListSkeleton } from '@/components/skeletons';
 import Link from 'next/link';
-import { ChevronRight, UsersRound } from 'lucide-react';
+import { ChevronRight, Plus, UsersRound } from 'lucide-react';
 import { requireUser } from '@/lib/auth';
 import { initials } from '@/lib/nav';
 import { EmptyState } from '@/components/EmptyState';
@@ -90,7 +90,7 @@ async function MyGroups() {
             <li key={m.groups.id}>
               <Link
                 href={`/g/${m.groups.id}`}
-                className="flex min-h-[72px] items-center gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                className="flex min-h-[72px] items-center gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-muted outline-none focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <Avatar className="size-12">
                   <AvatarFallback aria-hidden="true" className={`${tintFor(m.groups.id)} text-foreground`}>
@@ -108,6 +108,15 @@ async function MyGroups() {
             </li>
           ) : null,
         )}
+        <li className="hidden md:flex">
+          <Link
+            href="#crear"
+            className="flex min-h-[72px] flex-1 items-center justify-center gap-2 rounded-lg border border-dashed p-3 font-medium text-muted-foreground transition-colors hover:bg-muted outline-none focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            <Plus className="size-5" aria-hidden="true" />
+            Crear grupo
+          </Link>
+        </li>
       </ul>
       <CreateGroupForm hasGroups />
     </>
