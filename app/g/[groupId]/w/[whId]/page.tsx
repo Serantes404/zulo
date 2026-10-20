@@ -76,9 +76,9 @@ async function Warehouse({ params }: { params: Params }) {
       {zoneIds.length === 0 ? (
         <EmptyState
           icon={MapIcon}
-          title="Almacén sin plano"
+          title="Este almacén aún no tiene plano"
           description={isAdmin ? 'Dibuja el plano y marca las zonas para empezar a guardar material.' : 'Pide a un admin que cree el plano.'}
-          action={isAdmin ? <Button nativeButton={false} render={<Link href={editHref} />}>Crear el plano</Button> : undefined}
+          action={isAdmin ? <Button nativeButton={false} render={<Link href={editHref} />}>Dibujar el plano</Button> : undefined}
         />
       ) : (
         <PlanView

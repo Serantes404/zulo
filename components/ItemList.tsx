@@ -36,7 +36,12 @@ export function ItemList({ zone, items, isAdmin, groupId, warehouseId, highlight
   return (
     <div className="space-y-3">
       {items.length === 0 ? (
-        <EmptyState icon={PackageOpen} title="Zona sin material" description={isAdmin ? 'Añade el primer material de esta zona.' : 'Aún no hay material en esta zona.'} />
+        <EmptyState
+          icon={PackageOpen}
+          title="No hay material en esta zona"
+          description={isAdmin ? 'Añade el primer material de esta zona.' : undefined}
+          action={isAdmin ? <AddItemDialog zone={zone} groupId={groupId} warehouseId={warehouseId} /> : undefined}
+        />
       ) : (
         <ul className="divide-y rounded-lg border">
           {items.map((i) => (
@@ -63,7 +68,7 @@ export function ItemList({ zone, items, isAdmin, groupId, warehouseId, highlight
           ))}
         </ul>
       )}
-      {isAdmin && <AddItemDialog zone={zone} groupId={groupId} warehouseId={warehouseId} />}
+      {isAdmin && items.length > 0 && <AddItemDialog zone={zone} groupId={groupId} warehouseId={warehouseId} />}
     </div>
   );
 }

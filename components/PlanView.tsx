@@ -124,11 +124,11 @@ export function PlanView({ imageUrl, aspectRatio, layout, zones, items, isAdmin,
   if (isStatic) return <div aria-hidden="true">{plan}</div>;
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-x-6 lg:items-start">
-      {/* Buscador fijo bajo la cabecera de 56 px. */}
-      <div className="sticky top-14 z-30 -mx-4 bg-background/90 px-4 py-2 backdrop-blur lg:col-start-2 lg:row-start-1 lg:mx-0 lg:px-0">
+    <div>
+      {/* Buscador fijo bajo la cabecera de 56 px. Su bloque contenedor es este div (alto = todo el contenido); ningún ancestro tiene overflow. */}
+      <div className="sticky top-14 z-30 -mx-4 bg-background/90 px-4 py-2 backdrop-blur lg:mx-0 lg:px-0">
         <Label htmlFor="buscar" className="sr-only">Buscar material</Label>
-        <div className="relative">
+        <div className="relative lg:ml-auto lg:w-[380px]">
           <Search aria-hidden="true" className="pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2 text-muted-foreground" />
           <Input
             ref={inputRef}
@@ -158,7 +158,8 @@ export function PlanView({ imageUrl, aspectRatio, layout, zones, items, isAdmin,
         </div>
       </div>
 
-      <div className="space-y-3 lg:col-start-2 lg:row-start-2">
+      <div className="mt-2 grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:gap-x-6">
+      <div className="space-y-3 lg:col-start-2 lg:row-start-1">
         <div aria-live="polite" className="font-mono text-xs tracking-[0.12em] text-muted-foreground uppercase">
           {searching && (results.length === 1 ? '1 resultado' : `${results.length} resultados`)}
         </div>
@@ -194,7 +195,7 @@ export function PlanView({ imageUrl, aspectRatio, layout, zones, items, isAdmin,
           ))}
       </div>
 
-      <div className="space-y-3 lg:col-start-1 lg:row-span-3 lg:row-start-1">
+      <div className="space-y-3 lg:col-start-1 lg:row-span-2 lg:row-start-1">
         {plan}
         <p className="font-mono text-xs uppercase tracking-[0.12em] text-muted-foreground">
           Leyenda: reloj = prestado · triángulo = vencido
@@ -204,7 +205,7 @@ export function PlanView({ imageUrl, aspectRatio, layout, zones, items, isAdmin,
 
       {/* Escritorio: panel fijo a la derecha. */}
       {isDesktop && (
-        <div className="lg:col-start-2 lg:row-start-3">
+        <div className="lg:col-start-2 lg:row-start-2">
           {selectedZone ? (
             <ZonePanel
               zone={selectedZone}
@@ -242,6 +243,8 @@ export function PlanView({ imageUrl, aspectRatio, layout, zones, items, isAdmin,
           )}
         </div>
       )}
+
+      </div>
 
       {/* Móvil: sheet modal desde abajo (~60 % de la pantalla). */}
       <Sheet open={!isDesktop && !!selectedZone} onOpenChange={(o) => !o && closeZone()}>
