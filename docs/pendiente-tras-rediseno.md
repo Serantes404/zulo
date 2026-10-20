@@ -7,11 +7,20 @@ Rediseño completo (17 tareas + revisión final, commits ca42be6..HEAD). Lo que 
 - "Mis préstamos" con un usuario que esté en dos grupos: solo deben salir los del grupo actual.
 - Editor del plano en el móvil: arrastrar y redimensionar zonas, asas, "Crear las zonas a mano".
 
-## Antes de abrir Zulo a un segundo club (backend)
-- Permisos de UPDATE por columna también en `warehouses.group_id`, `zones.warehouse_id` e `items.zone_id` (hoy, alguien admin de dos grupos podría mover filas entre ellos). Mismo patrón que `supabase/migrations/20261020100000_column_grants.sql`.
-- Test SQL de "vencido" con un préstamo que venció ayer en Madrid (el actual no distingue la vista antigua).
-- `return_loan` no valida que la foto esté en la carpeta del grupo.
-- RGPD: `on delete set null` en `groups.created_by` y `loans.user_id`; protección del último admin; salir del grupo / quitar miembro.
+## Auditoría de seguridad 2026-10-20 (hecha)
+Migración `20261021090000_security_hardening.sql` aplicada y tests pasados (`security_hardening.sql`, `rls_check.sql`, `rls_extra.sql`, `ai_quota.sql`): Storage 5 MB solo JPEG con rutas estrictas, 500 fotos/día por grupo y DELETE para admins; topes (5 grupos por usuario, 20 almacenes y 2000 materiales por grupo); no se pueden mover almacenes/zonas/material entre grupos; tope global de IA 200/día; fotos de préstamo validadas; el total no baja de lo prestado. En la app: `safeNext` idempotente, `server-only` en Gemini, validación de rutas/cantidades/fechas/ids/roles en el servidor, mensajes neutros en el registro y mensajes claros para los topes.
+
+## Pendiente de Santi (panel de Supabase y Google)
+- Supabase → Authentication: CAPTCHA (Turnstile; avisar, la app necesita el widget), contraseña mínima 8, revisar Rate Limits (el login sale desde la IP del servidor).
+- Google AI Studio/Cloud: límite de gasto de la clave de Gemini.
+
+## Antes de abrir Zulo a más clubs (backend)
+- RGPD: `on delete set null` en `groups.created_by` y `loans.user_id` (y `return_loan` con `is distinct from`); protección del último admin; salir del grupo / quitar miembro; retención de fotos.
+- Invitaciones: el código no caduca y cualquier miembro puede leerlo por REST.
+- `revoke execute` de las funciones security definer para `anon`/`public`.
+- Confirmación de email (SMTP propio) y recuperación de contraseña; nombre por defecto sin la parte local del email.
+- Test SQL de "vencido" con un préstamo que venció ayer en Madrid.
+- Informes completos de la auditoría: carpeta local `.superpowers/sdd/security-audit-2026-10-20/` (no versionada).
 
 ## Mejoras pequeñas aparcadas
 - Pestaña "Buscar" en la página del grupo: con un solo almacén podría ir directa a su buscador (necesita pasar el dato al layout).
