@@ -1,4 +1,4 @@
-export type TabKey = 'almacenes' | 'buscar' | 'prestamos' | 'grupo';
+export type TabKey = 'almacenes' | 'prestamos' | 'grupo';
 
 /** Id del almacén si la ruta es /g/[groupId]/w/[whId]… */
 function warehousePath(groupId: string, pathname: string): string | null {
@@ -8,15 +8,11 @@ function warehousePath(groupId: string, pathname: string): string | null {
   return whId ? `${prefix}${whId}` : null;
 }
 
-export function tabHref(key: TabKey, groupId: string, pathname: string): string {
+export function tabHref(key: TabKey, groupId: string): string {
   const base = `/g/${groupId}`;
   switch (key) {
     case 'almacenes':
       return base;
-    case 'buscar': {
-      const wh = warehousePath(groupId, pathname);
-      return wh ? `${wh}#buscar` : base;
-    }
     case 'prestamos':
       return `${base}/prestamos`;
     case 'grupo':
@@ -24,7 +20,6 @@ export function tabHref(key: TabKey, groupId: string, pathname: string): string 
   }
 }
 
-/** El hash no llega al servidor ni a usePathname: Buscar nunca se marca. */
 export function isTabActive(key: TabKey, groupId: string, pathname: string): boolean {
   const base = `/g/${groupId}`;
   if (key === 'almacenes') return pathname === base || pathname.startsWith(`${base}/w/`);

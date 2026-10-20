@@ -21,7 +21,7 @@ export function BottomNav() {
           return (
             <li key={key} className="flex-1">
               <Link
-                href={tabHref(key, groupId, pathname)}
+                href={tabHref(key, groupId)}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
                   'relative flex h-full min-h-14 min-w-16 flex-col items-center justify-center gap-0.5 text-xs font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-colors duration-(--dur-fast) ease-(--ease-zulo)',

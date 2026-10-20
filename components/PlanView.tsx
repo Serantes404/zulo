@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react';
+import { useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react';
 import { ChevronRight, Clock, SearchX, TriangleAlert, Search, X } from 'lucide-react';
 import { availabilityLabel, searchItems, zoneStatus } from '@/lib/availability';
 import type { ItemWithPhoto } from '@/lib/itemPhotos';
@@ -48,25 +48,6 @@ export function PlanView({ imageUrl, aspectRatio, layout, zones, items, isAdmin,
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const isDesktop = useIsDesktop();
-
-  // El tab "Buscar" de la barra inferior enlaza a #buscar: enfocar el campo (el scroll lo hace el navegador / Next).
-  useEffect(() => {
-    if (isStatic) return;
-    const focusIfHash = () => {
-      if (window.location.hash === '#buscar') inputRef.current?.focus({ preventScroll: true });
-    };
-    const onClick = (e: MouseEvent) => {
-      const a = (e.target as Element | null)?.closest?.('a[href$="#buscar"]');
-      if (a) requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
-    };
-    focusIfHash();
-    window.addEventListener('hashchange', focusIfHash);
-    document.addEventListener('click', onClick);
-    return () => {
-      window.removeEventListener('hashchange', focusIfHash);
-      document.removeEventListener('click', onClick);
-    };
-  }, [isStatic]);
 
   const byZone = useMemo(() => {
     const m = new Map<string, ItemWithPhoto[]>();

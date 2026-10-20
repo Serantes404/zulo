@@ -19,7 +19,7 @@ export function HeaderTabs() {
           return (
             <li key={key}>
               <Link
-                href={tabHref(key, groupId, pathname)}
+                href={tabHref(key, groupId)}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
                   'inline-flex h-10 items-center gap-2 rounded-md px-3 text-sm font-medium outline-none transition-colors duration-(--dur-fast) ease-(--ease-zulo) hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
