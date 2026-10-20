@@ -1,0 +1,39 @@
+export type TabKey = 'almacenes' | 'buscar' | 'prestamos' | 'grupo';
+
+/** Id del almacén si la ruta es /g/[groupId]/w/[whId]… */
+function warehousePath(groupId: string, pathname: string): string | null {
+  const m = pathname.match(new RegExp(`^/g/${groupId}/w/([^/]+)`));
+  return m ? `/g/${groupId}/w/${m[1]}` : null;
+}
+
+export function tabHref(key: TabKey, groupId: string, pathname: string): string {
+  const base = `/g/${groupId}`;
+  switch (key) {
+    case 'almacenes':
+      return base;
+    case 'buscar': {
+      const wh = warehousePath(groupId, pathname);
+      return wh ? `${wh}#buscar` : base;
+    }
+    case 'prestamos':
+      return `${base}/prestamos`;
+    case 'grupo':
+      return `${base}#miembros`;
+  }
+}
+
+/** El hash no llega al servidor ni a usePathname: Buscar y Grupo nunca se marcan. */
+export function isTabActive(key: TabKey, groupId: string, pathname: string): boolean {
+  const base = `/g/${groupId}`;
+  if (key === 'almacenes') return pathname === base || pathname.startsWith(`${base}/w/`);
+  if (key === 'prestamos') return pathname === `${base}/prestamos` || pathname.startsWith(`${base}/prestamos/`);
+  return false;
+}
+
+export function initials(fullName: string | null | undefined, email: string | null | undefined): string {
+  const words = (fullName ?? '').trim().split(/\s+/).filter(Boolean);
+  if (words.length >= 2) return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+  if (words.length === 1) return words[0][0].toUpperCase();
+  const e = (email ?? '').trim();
+  return e ? e[0].toUpperCase() : '?';
+}
