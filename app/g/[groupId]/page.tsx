@@ -132,7 +132,7 @@ async function GroupContent({ params }: { params: Params }) {
           <span className="flex min-w-0 items-center gap-3">
             <Users aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
             <span className="min-w-0">
-              <span className="block font-medium">Miembros e invitación</span>
+              <span className="block font-medium">{isAdmin ? 'Miembros e invitación' : 'Miembros'}</span>
               <span className="block text-sm text-muted-foreground">{memberCount ?? 0} {memberCount === 1 ? 'miembro' : 'miembros'}</span>
             </span>
           </span>

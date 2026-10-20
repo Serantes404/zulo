@@ -17,6 +17,7 @@ export function MemberMenu({ groupId, userId, name, activeLoans = 0, canRemove =
   const toast = useToast();
   const [pending, startTransition] = useTransition();
   const [removeOpen, setRemoveOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
 
   function onClick() {
     startTransition(async () => {
@@ -44,7 +45,7 @@ export function MemberMenu({ groupId, userId, name, activeLoans = 0, canRemove =
           <MoreHorizontal aria-hidden="true" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={onClick}>
+          <DropdownMenuItem onClick={() => setAdminOpen(true)}>
             <ShieldCheck aria-hidden="true" /> Hacer admin
           </DropdownMenuItem>
           {canRemove && (
@@ -54,6 +55,21 @@ export function MemberMenu({ groupId, userId, name, activeLoans = 0, canRemove =
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <AlertDialog open={adminOpen} onOpenChange={setAdminOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Hacer admin a {name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {name} podrá editar almacenes, material e invitar o echar a miembros. No se puede deshacer desde la app.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={onClick}>Hacer admin</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {canRemove && (
         <AlertDialog open={removeOpen} onOpenChange={setRemoveOpen}>
