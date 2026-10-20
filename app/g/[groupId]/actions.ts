@@ -56,6 +56,31 @@ export async function makeAdmin(groupId: string, userId: string): Promise<{ ok: 
   return { ok: true };
 }
 
+export type RemoveMemberResult = { ok: true; inviteWarning?: true } | { error: string };
+
+export async function removeMember(groupId: string, userId: string): Promise<RemoveMemberResult> {
+  if (!isUuid(groupId) || !isUuid(userId)) return { error: NO_PERMISSION };
+  const { supabase, user } = await requireUser();
+  if (userId === user.id) return { error: 'No puedes echarte a ti mismo.' };
+  if ((await getRole(supabase, groupId, user.id)) !== 'admin') return { error: NO_PERMISSION };
+  // Defensa en profundidad: el objetivo debe existir en el grupo y no ser admin.
+  if ((await getRole(supabase, groupId, userId)) !== 'member') return { error: NO_PERMISSION };
+  const { data, error } = await supabase
+    .from('group_members')
+    .delete()
+    .eq('group_id', groupId)
+    .eq('user_id', userId)
+    .eq('role', 'member')
+    .select('user_id');
+  if (error || !data || data.length === 0) return { error: 'No se ha podido echar a este miembro.' };
+  // El link antiguo dejaría volver a entrar: se invalida. Si falla, la expulsión ya está hecha.
+  const { error: inviteError } = await supabase.rpc('regenerate_invite', { p_group: groupId });
+  revalidatePath(`/g/${groupId}`);
+  revalidatePath(`/g/${groupId}/grupo`);
+  revalidatePath(`/g/${groupId}/prestamos`);
+  return inviteError ? { ok: true, inviteWarning: true } : { ok: true };
+}
+
 export async function renameWarehouse(
   groupId: string,
   whId: string,
