@@ -74,6 +74,7 @@
 }
 
 :root {
+  color-scheme: light;
   --background: #f7f6f2;
   --foreground: #14161f;
   --card: #ffffff;
@@ -126,6 +127,7 @@
 /* Modo oscuro automatico segun el sistema (sin interruptor ni next-themes). */
 @media (prefers-color-scheme: dark) {
   :root {
+    color-scheme: dark;
     --background: #0e1220;
     --foreground: #e8eaf2;
     --card: #161b2c;

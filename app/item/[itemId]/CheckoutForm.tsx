@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/toaster';
+import { clampQuantity } from '@/lib/quantity';
 import { defaultDueDate, todayInMadrid } from '@/lib/dates';
 import { checkoutAction } from './actions';
 
@@ -16,14 +17,15 @@ type Props = { itemId: string; groupId: string; available: number; onDone: () =>
 export function CheckoutForm({ itemId, groupId, available, onDone }: Props) {
   const router = useRouter();
   const toast = useToast();
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState('1');
   const [purpose, setPurpose] = useState('');
   const [dueDate, setDueDate] = useState(defaultDueDate());
   const [photoPath, setPhotoPath] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  const clamp = (n: number) => Math.min(available, Math.max(1, Number.isFinite(n) ? n : 1));
+  const qtyNum = clampQuantity(quantity, available);
+  const step = (d: number) => setQuantity(String(clampQuantity(qtyNum + d, available)));
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -33,7 +35,7 @@ export function CheckoutForm({ itemId, groupId, available, onDone }: Props) {
     }
     setPending(true);
     setError(null);
-    const r = await checkoutAction({ itemId, quantity, purpose, dueDate, photoPath });
+    const r = await checkoutAction({ itemId, quantity: qtyNum, purpose, dueDate, photoPath });
     setPending(false);
     if ('error' in r) {
       setError(r.error);
@@ -61,11 +63,11 @@ export function CheckoutForm({ itemId, groupId, available, onDone }: Props) {
           <div className="space-y-1">
             <Label htmlFor="co-qty">Cantidad</Label>
             <div className="flex items-center gap-2">
-              <Button type="button" variant="outline" size="icon-lg" aria-label="Quitar una unidad" disabled={quantity <= 1} onClick={() => setQuantity((q) => clamp(q - 1))}>
+              <Button type="button" variant="outline" size="icon-lg" aria-label="Quitar una unidad" disabled={qtyNum <= 1} onClick={() => step(-1)}>
                 <Minus aria-hidden="true" />
               </Button>
-              <Input id="co-qty" type="number" inputMode="numeric" min={1} max={available} required className="w-20 text-center" value={quantity} onChange={(e) => setQuantity(clamp(Number(e.target.value)))} />
-              <Button type="button" variant="outline" size="icon-lg" aria-label="Añadir una unidad" disabled={quantity >= available} onClick={() => setQuantity((q) => clamp(q + 1))}>
+              <Input id="co-qty" type="number" inputMode="numeric" min={1} max={available} required className="w-20 text-center" value={quantity} onChange={(e) => setQuantity(e.target.value)} onBlur={() => setQuantity(String(qtyNum))} />
+              <Button type="button" variant="outline" size="icon-lg" aria-label="Añadir una unidad" disabled={qtyNum >= available} onClick={() => step(1)}>
                 <Plus aria-hidden="true" />
               </Button>
               <span className="text-sm text-muted-foreground">máx. {available}</span>
