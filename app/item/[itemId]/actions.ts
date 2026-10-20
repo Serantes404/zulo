@@ -80,6 +80,12 @@ export async function returnAction(input: unknown): Promise<ActionResult> {
   if (!p.success) return { error: 'Revisa los datos del formulario.' };
   const { loanId, photoPath, condition, notes } = p.data;
   const { supabase } = await requireUser();
+  // Antes de devolver: de qué material y grupo es, para revalidar las páginas que lo muestran.
+  const { data: loan } = await supabase
+    .from('loans')
+    .select('item_id, items(zones(warehouses(group_id)))')
+    .eq('id', loanId)
+    .maybeSingle();
   const { error } = await supabase.rpc('return_loan', {
     p_loan: loanId,
     p_photo: photoPath,
@@ -88,6 +94,14 @@ export async function returnAction(input: unknown): Promise<ActionResult> {
   });
   if (error) return { error: rpcErrorMessage(error.message) };
   revalidatePath(`/loan/${loanId}`);
+  if (loan) {
+    revalidatePath(`/item/${loan.item_id}`);
+    const groupId = loan.items?.zones?.warehouses?.group_id;
+    if (groupId) {
+      revalidatePath(`/g/${groupId}/prestamos`);
+      revalidatePath(`/g/${groupId}`);
+    }
+  }
   return { ok: true };
 }
 

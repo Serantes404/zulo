@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 import { ResponsiveSheet } from '@/components/ResponsiveSheet';
 import { ReturnForm } from './ReturnForm';
 
-type Props = { loanId: string; groupId: string; itemName: string; beforeUrl: string | null; beforeDate: string };
+type Props = { loanId: string; groupId: string; itemName: string; beforeUrl: string | null; beforeDate: string; defaultOpen?: boolean };
 
-export function ReturnButton({ loanId, groupId, itemName, beforeUrl, beforeDate }: Props) {
-  const [open, setOpen] = useState(false);
+export function ReturnButton({ loanId, groupId, itemName, beforeUrl, beforeDate, defaultOpen = false }: Props) {
+  const [open, setOpen] = useState(defaultOpen);
   return (
     <>
       <Button variant="outline" size="sm" onClick={() => setOpen(true)}>

@@ -18,20 +18,22 @@ import { ReturnButton } from './ReturnButton';
 import { TakeBar } from './TakeBar';
 
 type Params = Promise<{ itemId: string }>;
+type SearchParams = Promise<{ devolver?: string | string[] }>;
 
-export default function ItemPage({ params }: { params: Params }) {
+export default function ItemPage({ params, searchParams }: { params: Params; searchParams: SearchParams }) {
   return (
     // Con Cache Components, params y la sesión solo se leen dentro de un <Suspense>.
     <Suspense fallback={<DetailSkeleton />}>
-      <Item params={params} />
+      <Item params={params} searchParams={searchParams} />
     </Suspense>
   );
 }
 
 const sectionTitle = 'text-xs font-semibold tracking-wide text-muted-foreground uppercase';
 
-async function Item({ params }: { params: Params }) {
+async function Item({ params, searchParams }: { params: Params; searchParams: SearchParams }) {
   const { itemId } = await params;
+  const { devolver } = await searchParams;
   const { supabase, user } = await requireUser();
 
   const { data: item } = await supabase
@@ -64,6 +66,8 @@ async function Item({ params }: { params: Params }) {
   const due = soonestDue(loans);
 
   const canReturn = (l: { user_id: string }) => l.user_id === user.id || isAdmin;
+  // ?devolver=<loanId> abre la hoja de devolver solo si es un préstamo activo que el usuario puede devolver.
+  const autoOpenLoanId = typeof devolver === 'string' && loans.some((l) => l.id === devolver && canReturn(l)) ? devolver : null;
   const photoPaths = [
     ...(item.photo_path ? [item.photo_path] : []),
     ...loans.filter(canReturn).map((l) => l.checkout_photo_path),
@@ -142,6 +146,7 @@ async function Item({ params }: { params: Params }) {
                     itemName={item.name}
                     beforeUrl={urls[l.checkout_photo_path] ?? null}
                     beforeDate={madridShortDate(l.checked_out_at)}
+                    defaultOpen={l.id === autoOpenLoanId}
                   />
                 )}
               </li>
