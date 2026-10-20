@@ -6,9 +6,9 @@ import { buttonVariants } from '@/components/ui/button';
 import { PlanArt } from './login/PlanArt';
 
 export const metadata: Metadata = {
-  title: { absolute: 'Zulo · El material de tu club universitario, siempre localizado' },
+  title: { absolute: 'Zulo · El material de tu club, siempre localizado' },
   description:
-    'Zulo ayuda a los responsables de material de clubs y asociaciones universitarias a saber qué hay en el almacén, dónde está y quién se lo ha llevado.',
+    'Zulo ayuda a los responsables de material de clubs a saber qué hay en el almacén, dónde está y quién se lo ha llevado.',
 };
 
 const STEPS = [
@@ -30,12 +30,12 @@ export default function Landing() {
 
       <section className="grid gap-8 pt-6 md:grid-cols-2 md:items-center md:pt-12">
         <div className="space-y-5">
-          <p className="font-mono text-xs font-medium tracking-[0.12em] text-signal-ink uppercase">Para clubs y asociaciones universitarias</p>
+          <p className="font-mono text-xs font-medium tracking-[0.12em] text-signal-ink uppercase">Para clubs</p>
           <h1 className="text-3xl leading-tight font-semibold tracking-tight md:text-5xl">
             El material de tu club, siempre localizado.
           </h1>
           <p className="text-lg text-muted-foreground">
-            Zulo ayuda a los responsables de material de clubs universitarios a saber qué hay en el almacén, dónde está y quién se lo ha llevado.
+            Zulo ayuda a los responsables de material de clubs a saber qué hay en el almacén, dónde está y quién se lo ha llevado.
           </p>
           <Link href="/signup" className={buttonVariants({ size: 'lg', className: 'h-12 px-6 text-base' })}>
             Crear cuenta gratis

@@ -14,7 +14,7 @@ export function AuthPage({ mode, searchParams }: { mode: AuthMode; searchParams:
         <PlanArt className="h-40 w-full object-cover md:h-auto md:rounded-xl md:border md:border-plan-line" />
         <div className="space-y-2 px-4 md:px-0">
           <Logo href="/" />
-          <p className="text-2xl font-semibold tracking-tight">El material de tu club universitario, en un plano.</p>
+          <p className="text-2xl font-semibold tracking-tight">El material de tu club, en un plano.</p>
         </div>
       </section>
       <div className="w-full max-w-sm space-y-6 p-4 md:order-2 md:mx-auto md:p-0">
