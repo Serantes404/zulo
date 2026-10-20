@@ -1,6 +1,17 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react';
+import { Eraser, Undo2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { extendStroke, isEmpty, startStroke, undo, type Sketch } from '@/lib/sketch';
 
 // Resolución interna fija (4:3): el PNG exportado tiene siempre este tamaño, sea cual sea la pantalla.
@@ -8,15 +19,28 @@ const W = 1600;
 const H = 1200;
 const LINE = 8;
 
+// Puntos guía: solo una capa CSS encima del lienzo (pointer-events: none). Nunca se pintan en el canvas,
+// así el PNG que recibe la IA sale limpio. 20 × 15 celdas = la misma proporción 4:3 que el lienzo.
+const GUIDE_DOTS: React.CSSProperties = {
+  backgroundImage: 'radial-gradient(circle, rgb(20 22 31 / 0.28) 1.5px, transparent 2px)',
+  backgroundSize: 'calc(100% / 20) calc(100% / 15)',
+};
+
+/** El botón "Listo, detectar zonas" vive en la barra de acción fija del editor y llama a `done()`. */
+export type SketchPadHandle = { done: () => void };
+
 type Props = {
   busy?: boolean;
   onDone: (file: File) => void | Promise<void>;
+  onEmptyChange?: (empty: boolean) => void;
+  ref?: Ref<SketchPadHandle>;
 };
 
-export function SketchPad({ busy = false, onDone }: Props) {
+export function SketchPad({ busy = false, onDone, onEmptyChange, ref }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
   const [sketch, setSketch] = useState<Sketch>([]);
+  const [confirmClear, setConfirmClear] = useState(false);
 
   useEffect(() => {
     const ctx = canvasRef.current?.getContext('2d');
@@ -64,9 +88,8 @@ export function SketchPad({ busy = false, onDone }: Props) {
     drawing.current = false;
   }
 
-  function clear() {
-    if (confirm('¿Borrar todo el dibujo?')) setSketch([]);
-  }
+  const empty = isEmpty(sketch);
+  useEffect(() => onEmptyChange?.(empty), [empty, onEmptyChange]);
 
   function done() {
     canvasRef.current?.toBlob((blob) => {
@@ -74,34 +97,47 @@ export function SketchPad({ busy = false, onDone }: Props) {
     }, 'image/png');
   }
 
+  useImperativeHandle(ref, () => ({ done }));
+
   return (
-    <div className="space-y-2">
-      <p className="text-sm text-muted-foreground">
-        Dibuja el almacén visto desde arriba: paredes, estanterías, armarios, montones… Los nombres se ponen después.
-      </p>
-      <canvas
-        ref={canvasRef}
-        width={W}
-        height={H}
-        role="img"
-        aria-label="Lienzo para dibujar el plano del almacén"
-        className="aspect-[4/3] w-full touch-none rounded-lg border bg-white"
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={stop}
-        onPointerCancel={stop}
-      />
+    <div className="space-y-3">
+      <div className="relative overflow-hidden rounded-lg border border-input">
+        <canvas
+          ref={canvasRef}
+          width={W}
+          height={H}
+          role="img"
+          aria-label="Lienzo para dibujar el plano del almacén"
+          className="block aspect-[4/3] w-full touch-none bg-white"
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={stop}
+          onPointerCancel={stop}
+        />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0" style={GUIDE_DOTS} />
+      </div>
       <div className="flex flex-wrap gap-2">
-        <Button variant="outline" onClick={() => setSketch(undo)} disabled={busy || isEmpty(sketch)}>
+        <Button variant="outline" onClick={() => setSketch(undo)} disabled={busy || empty}>
+          <Undo2 aria-hidden="true" strokeWidth={1.75} className="size-5" />
           Deshacer
         </Button>
-        <Button variant="outline" onClick={clear} disabled={busy || isEmpty(sketch)}>
+        <Button variant="outline" onClick={() => setConfirmClear(true)} disabled={busy || empty}>
+          <Eraser aria-hidden="true" strokeWidth={1.75} className="size-5" />
           Borrar todo
         </Button>
-        <Button onClick={done} disabled={busy || isEmpty(sketch)}>
-          {busy ? 'Subiendo…' : 'Listo, detectar zonas'}
-        </Button>
       </div>
+      <AlertDialog open={confirmClear} onOpenChange={setConfirmClear}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Borrar todo el dibujo?</AlertDialogTitle>
+            <AlertDialogDescription>Se borran todos los trazos. No se puede deshacer.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => setSketch([])}>Borrar dibujo</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

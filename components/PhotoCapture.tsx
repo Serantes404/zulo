@@ -1,5 +1,9 @@
 'use client';
 import { useId, useState } from 'react';
+import { Camera, Loader2 } from 'lucide-react';
+import { cn } from 'cn';
+import { buttonVariants } from '@/components/ui/button';
+import { FormError } from '@/components/FormError';
 import { uploadPhoto } from '@/lib/photos';
 import { toBrowserImage } from '@/lib/heic';
 import type { PhotoKind } from '@/lib/photoPath';
@@ -41,24 +45,34 @@ export function PhotoCapture({ groupId, kind, label, onUploaded }: Props) {
 
   return (
     <div className="space-y-2">
-      <label
-        htmlFor={id}
-        className="inline-flex cursor-pointer items-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted"
-      >
-        {uploading ? 'Subiendo…' : label}
-      </label>
+      {/* El input va antes que la etiqueta para que esta muestre el foco (peer-focus-visible). */}
       <input
         id={id}
         type="file"
         accept="image/*"
         capture={kind === 'plans' ? undefined : 'environment'}
-        className="sr-only"
+        className="peer sr-only"
         onChange={onChange}
         disabled={uploading}
+        aria-describedby={error ? `${id}-error` : undefined}
       />
+      <label
+        htmlFor={id}
+        className={cn(
+          buttonVariants({ variant: 'outline' }),
+          'cursor-pointer peer-focus-visible:ring-3 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background peer-disabled:pointer-events-none peer-disabled:opacity-50',
+        )}
+      >
+        {uploading ? (
+          <Loader2 aria-hidden="true" className="size-5 animate-spin" />
+        ) : (
+          <Camera aria-hidden="true" strokeWidth={1.75} className="size-5" />
+        )}
+        {uploading ? 'Subiendo…' : label}
+      </label>
       {kind !== 'plans' && <p className="text-xs text-muted-foreground">Haz la foto al material, no a personas.</p>}
-      {preview && <img src={preview} alt="Vista previa de la foto subida" className="max-h-48 rounded-md border" />}
-      {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+      {preview && <img src={preview} alt="Vista previa de la foto subida" className="max-h-48 rounded-lg border" />}
+      <FormError id={`${id}-error`}>{error}</FormError>
     </div>
   );
 }

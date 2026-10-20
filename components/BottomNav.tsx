@@ -3,13 +3,13 @@
 import Link from 'next/link';
 import { useParams, usePathname } from 'next/navigation';
 import { cn } from 'cn';
-import { isTabActive, tabHref } from '@/lib/nav';
+import { hidesBottomNav, isTabActive, tabHref } from '@/lib/nav';
 import { TABS } from '@/components/nav-tabs';
 
 export function BottomNav() {
   const { groupId } = useParams<{ groupId?: string }>();
   const pathname = usePathname();
-  if (!groupId) return null;
+  if (!groupId || hidesBottomNav(groupId, pathname)) return null;
   return (
     <nav
       aria-label="Navegación del grupo"

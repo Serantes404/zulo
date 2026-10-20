@@ -32,6 +32,12 @@ export function isTabActive(key: TabKey, groupId: string, pathname: string): boo
   return false;
 }
 
+/** El editor del plano tiene su propia barra de acción fija abajo: ahí no se pinta la barra inferior. */
+export function hidesBottomNav(groupId: string, pathname: string): boolean {
+  const wh = warehousePath(groupId, pathname);
+  return wh !== null && /^\/edit\/?$/.test(pathname.slice(wh.length));
+}
+
 export function initials(fullName: string | null | undefined, email: string | null | undefined): string {
   const words = (fullName ?? '').trim().split(/\s+/).filter(Boolean);
   if (words.length >= 2) return (words[0][0] + words[words.length - 1][0]).toUpperCase();

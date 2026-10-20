@@ -284,3 +284,22 @@
     box-shadow: 0 0 0 4px var(--signal);
   }
 }
+
+/* Editor del plano, paso IA: línea de escaneo cobalto sobre el boceto (solo pantalla).
+   Con reduced-motion se oculta y se ve un spinner estático con "Detectando… N s". */
+.plan-scan {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 2px;
+  background: var(--primary);
+  box-shadow: 0 0 12px 2px color-mix(in srgb, var(--primary) 55%, transparent);
+  animation: plan-scan 2.4s var(--ease-zulo) infinite alternate;
+}
+@keyframes plan-scan {
+  from { top: 0; }
+  to { top: calc(100% - 2px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .plan-scan { display: none; }
+}

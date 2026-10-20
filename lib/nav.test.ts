@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { initials, tabHref, isTabActive } from './nav';
+import { hidesBottomNav, initials, tabHref, isTabActive } from './nav';
 
 describe('tabHref', () => {
   it('Almacenes, Préstamos y Grupo', () => {
@@ -55,5 +55,18 @@ describe('initials', () => {
   });
   it('sin datos', () => {
     expect(initials(null, null)).toBe('?');
+  });
+});
+
+describe('hidesBottomNav', () => {
+  it('se oculta en el editor del plano (tiene su propia barra fija)', () => {
+    expect(hidesBottomNav('g1', '/g/g1/w/w1/edit')).toBe(true);
+    expect(hidesBottomNav('g1', '/g/g1/w/w1/edit/')).toBe(true);
+  });
+  it('se ve en el resto', () => {
+    expect(hidesBottomNav('g1', '/g/g1')).toBe(false);
+    expect(hidesBottomNav('g1', '/g/g1/w/w1')).toBe(false);
+    expect(hidesBottomNav('g1', '/g/g1/prestamos')).toBe(false);
+    expect(hidesBottomNav('g1', '/g/g2/w/w1/edit')).toBe(false);
   });
 });
