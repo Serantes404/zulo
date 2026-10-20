@@ -23,6 +23,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/components/ui/toaster';
 import { imageAspect, uploadPhoto } from '@/lib/photos';
+import { uploadErrorMessage } from '@/lib/uploadErrors';
 import { fromDetected, newZone, type EditableZone } from '@/lib/zones';
 import { DEFAULT_LAYOUT, MAX_ASPECT, MIN_ASPECT, type Layout, type PlanSource } from '@/lib/layout';
 import { EDITOR_STEPS, editorStep, stepState, type EditorStep } from '@/lib/planEditorSteps';
@@ -193,7 +194,7 @@ export function PlanEditorClient({
       path = await uploadPhoto(file, groupId, 'plans');
     } catch (err) {
       console.error('uploadSketch', err);
-      setError('No se ha podido subir el dibujo. Inténtalo de nuevo.');
+      setError(uploadErrorMessage(err, 'No se ha podido subir el dibujo. Inténtalo de nuevo.'));
       setUploadingSketch(false);
       return;
     }

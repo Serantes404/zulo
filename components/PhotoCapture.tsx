@@ -5,6 +5,7 @@ import { cn } from 'cn';
 import { buttonVariants } from '@/components/ui/button';
 import { FormError } from '@/components/FormError';
 import { uploadPhoto } from '@/lib/photos';
+import { uploadErrorMessage } from '@/lib/uploadErrors';
 import { toBrowserImage } from '@/lib/heic';
 import type { PhotoKind } from '@/lib/photoPath';
 
@@ -36,7 +37,7 @@ export function PhotoCapture({ groupId, kind, label, variant = 'button', onUploa
       path = await uploadPhoto(file, groupId, kind);
     } catch (err) {
       console.error('uploadPhoto', err);
-      setError('No se ha podido subir la foto. Inténtalo de nuevo.');
+      setError(uploadErrorMessage(err, 'No se ha podido subir la foto. Inténtalo de nuevo.'));
       setUploading(false);
       return;
     }
