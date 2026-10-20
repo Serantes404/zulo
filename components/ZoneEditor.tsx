@@ -7,6 +7,8 @@ import type { Layout } from '@/lib/layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ZoneOverlay } from '@/components/ZoneOverlay';
+import { zoneSwatch } from '@/lib/zoneColors';
 
 type Props = {
   imageUrl: string | null;
@@ -72,15 +74,8 @@ export function ZoneEditor({ imageUrl, layout, aspectRatio, zones, onChange }: P
               onResizeStop={(_e, _dir, el, _delta, pos) =>
                 update(z.key, { w: el.offsetWidth / width, h: el.offsetHeight / height, x: pos.x / width, y: pos.y / height })
               }
-              style={{
-                border: `2px solid ${z.color}`,
-                background: `${z.color}33`,
-                outline: selected === z.key ? '2px dashed #111' : undefined,
-              }}
             >
-              <span className="absolute left-1 top-1 rounded bg-white/90 px-1.5 text-xs font-medium text-gray-900">
-                {z.label}
-              </span>
+              <ZoneOverlay label={z.label} color={z.color} selected={selected === z.key} />
             </Rnd>
           ))}
       </div>
@@ -96,11 +91,12 @@ export function ZoneEditor({ imageUrl, layout, aspectRatio, zones, onChange }: P
           <fieldset>
             <legend className="mb-1 text-sm">Color</legend>
             <div className="flex flex-wrap gap-2">
-              {PALETTE.map((c, i) => (
+              {PALETTE.map((c) => (
                 <button
                   key={c}
                   type="button"
-                  aria-label={`Color ${i + 1}`}
+                  aria-label={zoneSwatch(c).name}
+                  title={zoneSwatch(c).name}
                   aria-pressed={sel.color === c}
                   onClick={() => update(sel.key, { color: c })}
                   className="h-8 w-8 rounded-full border-2"

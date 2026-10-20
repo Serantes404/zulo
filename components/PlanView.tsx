@@ -1,11 +1,12 @@
 'use client';
 import { useMemo, useState } from 'react';
-import { availabilityLabel, searchItems, zoneStatus, type ItemWithAvail, type ZoneStatus } from '@/lib/availability';
+import { availabilityLabel, searchItems, zoneStatus, type ItemWithAvail } from '@/lib/availability';
 import { ItemList } from '@/components/ItemList';
 import { FloorPlan } from '@/components/FloorPlan';
 import type { Layout } from '@/lib/layout';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ZoneOverlay } from '@/components/ZoneOverlay';
 
 type ZoneRow = { id: string; label: string; color: string; x: number; y: number; w: number; h: number };
 type Props = {
@@ -17,13 +18,14 @@ type Props = {
   isAdmin: boolean;
   groupId: string;
   warehouseId: string;
+  /** Miniatura: solo el plano, sin foco, sin handlers y oculto a lectores de pantalla. */
+  static?: boolean;
 };
 
-const STATUS_TEXT: Record<ZoneStatus, string | null> = { overdue: 'Vencido', out: 'Prestado', ok: null };
 const GRID =
   'linear-gradient(to right, #e5e7eb 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)';
 
-export function PlanView({ imageUrl, aspectRatio, layout, zones, items, isAdmin, groupId, warehouseId }: Props) {
+export function PlanView({ imageUrl, aspectRatio, layout, zones, items, isAdmin, groupId, warehouseId, static: isStatic = false }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
   const [query, setQuery] = useState('');
 
@@ -39,13 +41,15 @@ export function PlanView({ imageUrl, aspectRatio, layout, zones, items, isAdmin,
   const selectedZone = zones.find((z) => z.id === selected);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" aria-hidden={isStatic || undefined}>
+      {!isStatic && (
       <div>
         <Label htmlFor="q" className="sr-only">Buscar material</Label>
         <Input id="q" type="search" placeholder="Buscar material (p. ej. linternas)" value={query} onChange={(e) => setQuery(e.target.value)} />
       </div>
+      )}
 
-      {searching && (
+      {!isStatic && searching && (
         <div aria-live="polite" className="text-sm">
           {results.length === 0 ? (
             <p>No hay material con ese nombre.</p>
@@ -75,49 +79,30 @@ export function PlanView({ imageUrl, aspectRatio, layout, zones, items, isAdmin,
         )}
         {zones.map((z) => {
           const st = zoneStatus(byZone.get(z.id) ?? []);
-          const isHit = searching && hits.has(z.id);
-          const dim = searching && !hits.has(z.id);
           return (
-            <button
+            <ZoneOverlay
               key={z.id}
-              type="button"
-              onClick={() => setSelected(z.id)}
-              aria-pressed={selected === z.id}
-              aria-label={`${z.label}${STATUS_TEXT[st] ? `, ${STATUS_TEXT[st]}` : ''}`}
-              className={`absolute ${layout ? 'rounded-md' : 'rounded-sm'} transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-black`}
-              style={{
-                left: `${z.x * 100}%`,
-                top: `${z.y * 100}%`,
-                width: `${z.w * 100}%`,
-                height: `${z.h * 100}%`,
-                border: `2px solid ${z.color}`,
-                background: `${z.color}${selected === z.id ? '66' : '33'}`,
-                opacity: dim ? 0.25 : 1,
-                boxShadow: isHit ? `0 0 0 4px ${z.color}` : undefined,
-              }}
-            >
-              {layout ? (
-                <span className="absolute inset-0 flex items-center justify-center p-1 text-center text-xs font-semibold text-gray-900 sm:text-sm">
-                  {z.label}
-                </span>
-              ) : (
-                <span className="absolute left-1 top-1 rounded bg-white/90 px-1.5 text-xs font-medium text-gray-900">{z.label}</span>
-              )}
-              {STATUS_TEXT[st] && (
-                <span
-                  className={`absolute bottom-1 right-1 rounded px-1.5 text-xs font-medium ${
-                    st === 'overdue' ? 'bg-red-700 text-white' : 'bg-amber-200 text-amber-950'
-                  }`}
-                >
-                  {STATUS_TEXT[st]}
-                </span>
-              )}
-            </button>
+              label={z.label}
+              color={z.color}
+              geometry={z}
+              status={st}
+              selected={!isStatic && selected === z.id}
+              hit={searching && hits.has(z.id)}
+              dim={searching && !hits.has(z.id)}
+              aria-pressed={isStatic ? undefined : selected === z.id}
+              onClick={isStatic ? undefined : () => setSelected(z.id)}
+            />
           );
         })}
       </div>
 
-      {selectedZone ? (
+      {!isStatic && (
+        <p className="font-mono text-xs uppercase tracking-[0.12em] text-muted-foreground">
+          Leyenda: reloj = prestado · triángulo = vencido
+        </p>
+      )}
+
+      {isStatic ? null : selectedZone ? (
         <ItemList
           zone={selectedZone}
           items={byZone.get(selectedZone.id) ?? []}

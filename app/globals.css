@@ -202,3 +202,85 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Capa de zonas compartida (components/ZoneOverlay.tsx). Variables --zone-* inline por zona. */
+.zone-overlay {
+  --_fill: var(--zone-fill);
+  --_border: var(--zone-border);
+  --_chip-bg: var(--zone-chip-bg);
+  --_chip-text: var(--zone-chip-text);
+  --_alpha: 14%;
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid var(--_border);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--_fill) var(--_alpha), transparent);
+  transition: opacity var(--dur) var(--ease-zulo), background-color var(--dur) var(--ease-zulo);
+}
+@media (prefers-color-scheme: dark) {
+  .zone-overlay {
+    --_fill: var(--zone-fill-dark);
+    --_border: var(--zone-border-dark);
+    --_chip-bg: var(--zone-chip-bg-dark);
+    --_chip-text: var(--zone-chip-text-dark);
+    --_alpha: 18%;
+  }
+}
+.zone-overlay[data-selected='true'] {
+  --_alpha: 28%;
+  border-width: 3px;
+}
+.zone-overlay[data-dim='true'] {
+  opacity: 0.35;
+}
+.zone-overlay[data-overdue='true'] {
+  border-style: dashed;
+  border-color: var(--danger);
+}
+.zone-chip {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  max-width: calc(100% - 8px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 600;
+  background: var(--_chip-bg);
+  color: var(--_chip-text);
+}
+@media (min-width: 640px) {
+  .zone-chip { font-size: 13px; }
+}
+.zone-mark {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  display: flex;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+}
+.zone-mark[data-tone='warning'] { background: var(--warning); color: var(--warning-foreground); }
+.zone-mark[data-tone='danger'] { background: var(--danger); color: var(--danger-foreground); }
+.zone-overlay[data-hit='true'] {
+  box-shadow: 0 0 0 3px var(--signal);
+  animation: zone-pulse 1.4s var(--ease-zulo) infinite;
+}
+@keyframes zone-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px var(--signal); }
+  50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--signal) 40%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Anillo estático (sin animación) en lugar de un pulso de 0,01 ms. */
+  .zone-overlay[data-hit='true'] {
+    animation: none !important;
+    box-shadow: 0 0 0 4px var(--signal);
+  }
+}
