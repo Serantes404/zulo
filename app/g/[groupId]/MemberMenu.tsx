@@ -10,10 +10,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useToast } from '@/components/ui/toaster';
 import { makeAdmin, removeMember } from './actions';
 
-type Props = { groupId: string; userId: string; name: string; activeLoans?: number; canRemove?: boolean };
+type Props = { groupId: string; userId: string; name: string; activeLoans?: number; canRemove?: boolean; targetIsAdmin?: boolean };
 
-/** Menú ⋯ de un miembro no admin (solo lo ve un admin): Hacer admin y Echar del grupo. */
-export function MemberMenu({ groupId, userId, name, activeLoans = 0, canRemove = false }: Props) {
+/** Menú ⋯ de otro miembro (solo lo ve un admin): Hacer admin (solo a miembros) y Echar del grupo. */
+export function MemberMenu({ groupId, userId, name, activeLoans = 0, canRemove = false, targetIsAdmin = false }: Props) {
   const toast = useToast();
   const [pending, startTransition] = useTransition();
   const [removeOpen, setRemoveOpen] = useState(false);
@@ -45,9 +45,11 @@ export function MemberMenu({ groupId, userId, name, activeLoans = 0, canRemove =
           <MoreHorizontal aria-hidden="true" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setAdminOpen(true)}>
-            <ShieldCheck aria-hidden="true" /> Hacer admin
-          </DropdownMenuItem>
+          {!targetIsAdmin && (
+            <DropdownMenuItem onClick={() => setAdminOpen(true)}>
+              <ShieldCheck aria-hidden="true" /> Hacer admin
+            </DropdownMenuItem>
+          )}
           {canRemove && (
             <DropdownMenuItem variant="destructive" onClick={() => setRemoveOpen(true)}>
               <UserMinus aria-hidden="true" /> Echar del grupo
@@ -77,6 +79,7 @@ export function MemberMenu({ groupId, userId, name, activeLoans = 0, canRemove =
             <AlertDialogHeader>
               <AlertDialogTitle>¿Echar a {name} del grupo?</AlertDialogTitle>
               <AlertDialogDescription>
+                {targetIsAdmin && 'Es admin del grupo: perderá también sus permisos de admin. '}
                 Perderá el acceso al grupo y a sus almacenes. Se creará un link de invitación nuevo para que no pueda volver a entrar con el anterior.
                 {activeLoans > 0 &&
                   ` Tiene ${activeLoans} ${activeLoans === 1 ? 'préstamo activo' : 'préstamos activos'}; seguirán registrados y un admin puede devolverlos desde la ficha del material.`}

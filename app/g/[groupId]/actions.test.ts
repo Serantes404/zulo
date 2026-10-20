@@ -89,7 +89,7 @@ describe('removeMember', () => {
   it('un admin echa a un miembro, borra la fila y regenera el link', async () => {
     expect(await removeMember(G, U)).toEqual({ ok: true });
     expect(writes()).toMatchObject([
-      { table: 'group_members', op: 'delete', filters: [['group_id', G], ['user_id', U], ['role', 'member']] },
+      { table: 'group_members', op: 'delete', filters: [['group_id', G], ['user_id', U]] },
       { rpc: 'regenerate_invite', op: 'rpc', payload: { p_group: G } },
     ]);
   });
@@ -107,8 +107,25 @@ describe('removeMember', () => {
     expect(await removeMember(G, ME)).toEqual({ error: 'No puedes echarte a ti mismo.' });
     expect(db.calls).toEqual([]);
   });
-  it('no echa a un admin (el objetivo no es member)', async () => {
+  it('un admin puede echar a otro admin y regenera el link', async () => {
     targetRole = 'admin';
+    db = fakeSupabase((c) =>
+      c.table === 'group_members' && c.op === 'select' ? { data: [{ user_id: ME }, { user_id: U }] } : respond(c),
+    );
+    expect(await removeMember(G, U)).toEqual({ ok: true });
+    expect(writes()).toMatchObject([
+      { table: 'group_members', op: 'delete', filters: [['group_id', G], ['user_id', U]] },
+      { rpc: 'regenerate_invite', op: 'rpc' },
+    ]);
+  });
+  it('no deja el grupo sin admins', async () => {
+    targetRole = 'admin';
+    db = fakeSupabase((c) => (c.table === 'group_members' && c.op === 'select' ? { data: [{ user_id: U }] } : respond(c)));
+    expect(await removeMember(G, U)).toEqual({ error: 'El grupo necesita al menos un admin.' });
+    expect(writes()).toEqual([]);
+  });
+  it('un objetivo de otro grupo (sin fila en este) devuelve NO_PERMISSION', async () => {
+    targetRole = null;
     expect(await removeMember(G, U)).toEqual({ error: NO_PERMISSION });
     expect(writes()).toEqual([]);
   });

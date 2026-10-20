@@ -2,9 +2,9 @@ import type { Role } from '@/lib/auth';
 
 type Person = { id: string; role: Role };
 
-/** Solo un admin puede echar, solo a miembros (no admins) y nunca a sí mismo. */
+/** Solo un admin puede echar (a miembros y a otros admins) y nunca a sí mismo. */
 export function canRemoveMember(viewer: Person, target: Person): boolean {
-  return viewer.role === 'admin' && target.role === 'member' && viewer.id !== target.id;
+  return viewer.role === 'admin' && viewer.id !== target.id;
 }
 
 /** Préstamos activos por usuario, a partir de las filas de una sola consulta. */

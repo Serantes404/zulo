@@ -6,11 +6,12 @@ describe('canRemoveMember', () => {
   it('un admin puede echar a un miembro', () => {
     expect(canRemoveMember(admin, { id: 'm', role: 'member' })).toBe(true);
   });
-  it('no puede echar a otro admin', () => {
-    expect(canRemoveMember(admin, { id: 'b', role: 'admin' })).toBe(false);
+  it('un admin puede echar a otro admin', () => {
+    expect(canRemoveMember(admin, { id: 'b', role: 'admin' })).toBe(true);
   });
   it('no puede echarse a sí mismo', () => {
     expect(canRemoveMember(admin, { id: 'a', role: 'member' })).toBe(false);
+    expect(canRemoveMember(admin, { id: 'a', role: 'admin' })).toBe(false);
   });
   it('un miembro no puede echar a nadie', () => {
     expect(canRemoveMember({ id: 'm', role: 'member' }, { id: 'n', role: 'member' })).toBe(false);

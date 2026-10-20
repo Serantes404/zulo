@@ -63,14 +63,19 @@ export async function removeMember(groupId: string, userId: string): Promise<Rem
   const { supabase, user } = await requireUser();
   if (userId === user.id) return { error: 'No puedes echarte a ti mismo.' };
   if ((await getRole(supabase, groupId, user.id)) !== 'admin') return { error: NO_PERMISSION };
-  // Defensa en profundidad: el objetivo debe existir en el grupo y no ser admin.
-  if ((await getRole(supabase, groupId, userId)) !== 'member') return { error: NO_PERMISSION };
+  // Defensa en profundidad: el objetivo debe existir en este grupo (admin o miembro).
+  const targetRole = await getRole(supabase, groupId, userId);
+  if (targetRole !== 'admin' && targetRole !== 'member') return { error: NO_PERMISSION };
+  if (targetRole === 'admin') {
+    // Nunca dejar el grupo sin admins (el que llama es admin y no puede echarse a sí mismo, pero se comprueba).
+    const { data: admins } = await supabase.from('group_members').select('user_id').eq('group_id', groupId).eq('role', 'admin');
+    if (!(admins ?? []).some((a) => a.user_id !== userId)) return { error: 'El grupo necesita al menos un admin.' };
+  }
   const { data, error } = await supabase
     .from('group_members')
     .delete()
     .eq('group_id', groupId)
     .eq('user_id', userId)
-    .eq('role', 'member')
     .select('user_id');
   if (error || !data || data.length === 0) return { error: 'No se ha podido echar a este miembro.' };
   // El link antiguo dejaría volver a entrar: se invalida. Si falla, la expulsión ya está hecha.

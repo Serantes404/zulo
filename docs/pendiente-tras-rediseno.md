@@ -15,6 +15,7 @@ Migración `20261021090000_security_hardening.sql` aplicada y tests pasados (`se
 
 ## Antes de abrir Zulo a más clubs (backend)
 - RGPD: `on delete set null` en `groups.created_by` y `loans.user_id` (y `return_loan` con `is distinct from`); protección del último admin; salir del grupo / quitar miembro; retención de fotos.
+- Último admin: dos admins que se echan a la vez podrían dejar el grupo sin admins; blindarlo con un trigger en `group_members` (migración).
 - Invitaciones: el código no caduca y cualquier miembro puede leerlo por REST.
 - `revoke execute` de las funciones security definer para `anon`/`public`.
 - Confirmación de email (SMTP propio) y recuperación de contraseña; nombre por defecto sin la parte local del email.

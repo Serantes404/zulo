@@ -69,10 +69,11 @@ async function GroupMembersContent({ params }: { params: Params }) {
                 </Avatar>
                 <span className="min-w-0 flex-1 truncate">{name}</span>
                 <Badge variant={m.role === 'admin' ? 'default' : 'outline'}>{m.role === 'admin' ? 'Admin' : 'Miembro'}</Badge>
-                {isAdmin && m.role === 'member' ? (
+                {isAdmin && m.user_id !== user.id ? (
                   <MemberMenu
                     groupId={groupId}
                     userId={m.user_id}
+                    targetIsAdmin={m.role === 'admin'}
                     name={name}
                     canRemove={canRemoveMember({ id: user.id, role }, { id: m.user_id, role: m.role as Role })}
                     activeLoans={loansByUser[m.user_id] ?? 0}
