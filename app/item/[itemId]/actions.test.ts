@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { fakeSupabase, type Call, type Result } from '@/lib/test/fakeSupabase';
-import { BAD_PHOTO, NO_PERMISSION } from '@/lib/errors';
+import { BAD_PHOTO, NO_PERMISSION, quantityBelowLentMessage } from '@/lib/errors';
 import { DUE_DATE_PAST } from '@/lib/schemas';
 
 const ME = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
@@ -25,7 +25,7 @@ vi.mock('@/lib/auth', () => ({
   getRole: vi.fn(async () => role),
 }));
 
-const { checkoutAction, returnAction, setItemPhoto } = await import('./actions');
+const { checkoutAction, returnAction, setItemPhoto, updateItem, deleteItem } = await import('./actions');
 
 // Respuestas por defecto: el material es del grupo G y el préstamo salió con photo(G,'loans',1).
 function defaults(call: Call): Result {
@@ -121,5 +121,69 @@ describe('setItemPhoto', () => {
   it("itemId='x' devuelve error sin consultar", async () => {
     expect(await setItemPhoto('x', photo(G, 'items'))).toEqual({ error: NO_PERMISSION });
     expect(db.calls).toEqual([]);
+  });
+});
+
+const form = (name: string, quantity: string) => {
+  const f = new FormData();
+  f.set('name', name);
+  f.set('quantity', quantity);
+  return f;
+};
+
+describe('updateItem', () => {
+  it('un admin guarda los cambios', async () => {
+    expect(await updateItem(ITEM, null, form('Linternas', '5'))).toEqual({ ok: true });
+    expect(writes()).toMatchObject([{ table: 'items', op: 'update', payload: { name: 'Linternas', quantity_total: 5 } }]);
+  });
+  it('un miembro recibe error y no se llama a update', async () => {
+    role = 'member';
+    expect(await updateItem(ITEM, null, form('Linternas', '5'))).toEqual({ error: NO_PERMISSION });
+    expect(writes()).toEqual([]);
+  });
+  it("itemId='x' devuelve error sin consultar", async () => {
+    expect(await updateItem('x', null, form('Linternas', '5'))).toEqual({ error: NO_PERMISSION });
+    expect(db.calls).toEqual([]);
+  });
+  it('no deja bajar el total por debajo de lo prestado', async () => {
+    respond = (c) => (c.table === 'item_availability' ? { data: { quantity_out: 3 } } : defaults(c));
+    expect(await updateItem(ITEM, null, form('Linternas', '2'))).toEqual({ error: quantityBelowLentMessage(3) });
+    expect(writes()).toEqual([]);
+  });
+  it('traduce QUANTITY_BELOW_LENT de la BD (préstamo simultáneo) con el número actual', async () => {
+    let out = 0;
+    respond = (c) => {
+      if (c.table === 'item_availability') return { data: { quantity_out: out } };
+      if (c.op === 'update') {
+        out = 4;
+        return { error: { message: 'QUANTITY_BELOW_LENT' } };
+      }
+      return defaults(c);
+    };
+    expect(await updateItem(ITEM, null, form('Linternas', '2'))).toEqual({ error: quantityBelowLentMessage(4) });
+  });
+  it('si el update no toca filas devuelve error, no "guardado"', async () => {
+    respond = (c) => (c.op === 'update' ? { data: [] } : defaults(c));
+    expect(await updateItem(ITEM, null, form('Linternas', '5'))).toHaveProperty('error');
+  });
+});
+
+describe('deleteItem', () => {
+  it('un admin borra y vuelve a backTo saneado', async () => {
+    await expect(deleteItem(ITEM, '/.//evil.com')).rejects.toThrow('REDIRECT:/');
+    expect(writes()).toMatchObject([{ table: 'items', op: 'delete' }]);
+  });
+  it('un miembro recibe error y no se llama a delete', async () => {
+    role = 'member';
+    expect(await deleteItem(ITEM, '/g')).toEqual({ error: NO_PERMISSION });
+    expect(writes()).toEqual([]);
+  });
+  it("itemId='x' devuelve error sin consultar", async () => {
+    expect(await deleteItem('x', '/g')).toEqual({ error: NO_PERMISSION });
+    expect(db.calls).toEqual([]);
+  });
+  it('si el delete no toca filas devuelve error', async () => {
+    respond = (c) => (c.op === 'delete' ? { data: [] } : defaults(c));
+    expect(await deleteItem(ITEM, '/g')).toHaveProperty('error');
   });
 });

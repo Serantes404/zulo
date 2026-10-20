@@ -1,14 +1,19 @@
 'use server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { requireUser } from '@/lib/auth';
+import { getRole, requireUser } from '@/lib/auth';
+import { NO_PERMISSION } from '@/lib/errors';
+import { isUuid } from '@/lib/schemas';
 import { deleteWarehouseError } from '@/lib/warehouseDelete';
 import { parseWarehouseName } from '@/lib/warehouseName';
 
 export async function createWarehouse(groupId: string, formData: FormData) {
   const name = parseWarehouseName(formData);
   if (!name) return;
-  const { supabase } = await requireUser();
+  if (!isUuid(groupId)) throw new Error(NO_PERMISSION);
+  const { supabase, user } = await requireUser();
+  // Defensa en profundidad: RLS ya lo impide, pero no nos fiamos solo de ello.
+  if ((await getRole(supabase, groupId, user.id)) !== 'admin') throw new Error(NO_PERMISSION);
   const { data, error } = await supabase
     .from('warehouses')
     .insert({ group_id: groupId, name })
@@ -27,7 +32,9 @@ export async function regenerateInvite(groupId: string): Promise<{ ok: true } | 
 }
 
 export async function makeAdmin(groupId: string, userId: string): Promise<{ ok: true } | { error: string }> {
-  const { supabase } = await requireUser();
+  if (!isUuid(groupId) || !isUuid(userId)) return { error: NO_PERMISSION };
+  const { supabase, user } = await requireUser();
+  if ((await getRole(supabase, groupId, user.id)) !== 'admin') return { error: NO_PERMISSION };
   const { data, error } = await supabase
     .from('group_members')
     .update({ role: 'admin' })

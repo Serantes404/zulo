@@ -3,7 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireUser } from '@/lib/auth';
 import { checkoutSchema, isUuid, itemSchema, returnSchema } from '@/lib/schemas';
-import { BAD_PHOTO, NO_PERMISSION, rpcErrorMessage } from '@/lib/errors';
+import { BAD_PHOTO, NO_PERMISSION, quantityBelowLentMessage, rpcErrorMessage } from '@/lib/errors';
 import { isPhotoPath } from '@/lib/photoPath';
 import { itemGroupId, requireItemAdmin } from '@/lib/ownership';
 import { safeNext } from '@/lib/safeNext';
@@ -46,30 +46,44 @@ export async function checkoutAction(input: unknown): Promise<ActionResult> {
   return { ok: true };
 }
 
+async function quantityOut(supabase: Awaited<ReturnType<typeof requireUser>>['supabase'], itemId: string) {
+  const { data } = await supabase.from('item_availability').select('quantity_out').eq('item_id', itemId).maybeSingle();
+  return data?.quantity_out ?? 0;
+}
+
 export async function updateItem(itemId: string, _prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  if (!isUuid(itemId)) return { error: NO_PERMISSION };
   const p = itemSchema.safeParse({
     name: formData.get('name'),
     quantity: formData.get('quantity'),
     notes: formData.get('notes') || undefined,
   });
   if (!p.success) return { error: 'Revisa el nombre y la cantidad.' };
-  const { supabase } = await requireUser();
-  const { data: a } = await supabase.from('item_availability').select('quantity_out').eq('item_id', itemId).maybeSingle();
-  const out = a?.quantity_out ?? 0;
-  if (p.data.quantity < out) return { error: `Hay ${out} unidades prestadas: la cantidad total no puede ser menor.` };
-  const { error } = await supabase
+  const { supabase, user } = await requireUser();
+  if (!(await requireItemAdmin(supabase, user.id, itemId))) return { error: NO_PERMISSION };
+  const out = await quantityOut(supabase, itemId);
+  if (p.data.quantity < out) return { error: quantityBelowLentMessage(out) };
+  const { data, error } = await supabase
     .from('items')
     .update({ name: p.data.name, quantity_total: p.data.quantity, notes: p.data.notes ?? null })
-    .eq('id', itemId);
-  if (error) return { error: 'No se han podido guardar los cambios.' };
+    .eq('id', itemId)
+    .select('id');
+  // Un préstamo puede entrar entre la comprobación y el update: el trigger de la BD lo para.
+  if (error?.message.includes('QUANTITY_BELOW_LENT')) {
+    return { error: quantityBelowLentMessage(await quantityOut(supabase, itemId)) };
+  }
+  if (error || !data || data.length === 0) return { error: 'No se han podido guardar los cambios.' };
   revalidatePath(`/item/${itemId}`);
   return { ok: true };
 }
 
 export async function deleteItem(itemId: string, backTo: string): Promise<ActionResult> {
-  const { supabase } = await requireUser();
-  const { error } = await supabase.from('items').delete().eq('id', itemId);
+  if (!isUuid(itemId)) return { error: NO_PERMISSION };
+  const { supabase, user } = await requireUser();
+  if (!(await requireItemAdmin(supabase, user.id, itemId))) return { error: NO_PERMISSION };
+  const { data, error } = await supabase.from('items').delete().eq('id', itemId).select('id');
   if (error) return { error: rpcErrorMessage(error.message) };
+  if (!data || data.length === 0) return { error: 'No se ha podido borrar el material.' };
   redirect(safeNext(backTo));
 }
 
