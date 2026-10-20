@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Camera, Check, Loader2, Plus, RefreshCw, Sparkles, TriangleAlert, X } from 'lucide-react';
+import { Camera, Check, LayoutGrid, Loader2, Plus, RefreshCw, Sparkles, TriangleAlert, X } from 'lucide-react';
 import { cn } from 'cn';
 import { ZoneDetails, ZoneEditor } from '@/components/ZoneEditor';
 import { PhotoCapture } from '@/components/PhotoCapture';
@@ -111,7 +111,10 @@ export function PlanEditorClient({
   const runId = useRef(0);
   const sketchRef = useRef<SketchPadHandle>(null);
 
-  const showEditor = imageUrl !== null || legacyGrid;
+  // `manual`: zonas a mano sin imagen ni boceto (alternativa de teclado al lienzo, WCAG 2.1.1).
+  // Se guarda como los almacenes antiguos sobre cuadrícula: saveZones sin `plan`, solo zonas.
+  const [manual, setManual] = useState(false);
+  const showEditor = imageUrl !== null || legacyGrid || manual;
   const step = editorStep({ sketching, detecting, saving, hasPlan: showEditor });
   const dirty = pending !== null || zones !== initialZones || (sketching && !sketchEmpty);
   const sel = zones.find((z) => z.key === selected);
@@ -225,6 +228,12 @@ export function PlanEditorClient({
     const z = newZone(zones.length);
     setZones([...zones, z]);
     setSelected(z.key);
+  }
+
+  function startManual() {
+    setManual(true);
+    setSketching(false);
+    if (zones.length === 0) addZone();
   }
 
   function drawByHand() {
@@ -402,11 +411,21 @@ export function PlanEditorClient({
         <div className="space-y-4 lg:col-start-2 lg:row-start-2">
           {step === 'draw' && (
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">¿Ya tienes un boceto o una foto?</p>
-              <Button variant="outline" onClick={() => setUploadOpen(true)} disabled={uploadingSketch}>
-                <Camera aria-hidden="true" strokeWidth={1.75} className="size-5" />
-                Subir imagen
-              </Button>
+              <p className="text-sm text-muted-foreground">
+                {showEditor ? '¿Ya tienes un boceto o una foto?' : '¿No puedes dibujar? Sube una imagen o crea las zonas a mano.'}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" onClick={() => setUploadOpen(true)} disabled={uploadingSketch}>
+                  <Camera aria-hidden="true" strokeWidth={1.75} className="size-5" />
+                  Subir imagen
+                </Button>
+                {!showEditor && (
+                  <Button variant="ghost" onClick={startManual} disabled={uploadingSketch}>
+                    <LayoutGrid aria-hidden="true" strokeWidth={1.75} className="size-5" />
+                    Crear las zonas a mano
+                  </Button>
+                )}
+              </div>
             </div>
           )}
 

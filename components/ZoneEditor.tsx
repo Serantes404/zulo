@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, ty
 import { Rnd, type HandleComponent, type HandleStyles } from 'react-rnd';
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Check, ChevronRight, Minus, Plus, Trash2 } from 'lucide-react';
 import { PALETTE, clampZone, type EditableZone } from '@/lib/zones';
-import { NUDGE, nudgeZone, zoneKeyAction, type ZoneNudge } from '@/lib/zoneKeys';
+import { NUDGE, handleRects, nudgeZone, zoneKeyAction, type HandleRect, type ZoneNudge } from '@/lib/zoneKeys';
 import { FloorPlan } from '@/components/FloorPlan';
 import type { Layout } from '@/lib/layout';
 import { Button } from '@/components/ui/button';
@@ -27,26 +27,27 @@ type Props = {
 const GRID =
   'linear-gradient(to right, var(--plan-grid) 1px, transparent 1px), linear-gradient(to bottom, var(--plan-grid) 1px, transparent 1px)';
 
-// Asas de react-rnd: área táctil de 44 px; lo visible es un punto en cada lado y un triángulo en la esquina.
-const HIT = 44;
-const SIDE_HANDLES: HandleStyles = {
-  top: { width: HIT, height: HIT, top: -HIT / 2, left: '50%', marginLeft: -HIT / 2 },
-  bottom: { width: HIT, height: HIT, bottom: -HIT / 2, left: '50%', marginLeft: -HIT / 2 },
-  left: { width: HIT, height: HIT, left: -HIT / 2, top: '50%', marginTop: -HIT / 2 },
-  right: { width: HIT, height: HIT, right: -HIT / 2, top: '50%', marginTop: -HIT / 2 },
-  // La esquina asoma 10 px fuera de la zona; el triángulo de 24 px queda dentro, pegado a la esquina.
-  bottomRight: { width: HIT, height: HIT, right: -10, bottom: -10 },
-};
+// Asas de react-rnd: área táctil de hasta 44 px (handleRects la recorta en zonas pequeñas para que el centro
+// siga siendo arrastrable); lo visible es un punto en cada lado y un triángulo de 24 px en la esquina.
+// Lo visible no recibe eventos: solo cuenta el área calculada.
+function handleStyles(w: number, h: number): HandleStyles {
+  const toStyle = (r: HandleRect): CSSProperties => ({
+    left: r.x, top: r.y, width: r.w, height: r.h, right: 'auto', bottom: 'auto', margin: 0,
+  });
+  const r = handleRects(w, h);
+  return { top: toStyle(r.top), bottom: toStyle(r.bottom), left: toStyle(r.left), right: toStyle(r.right), bottomRight: toStyle(r.bottomRight) };
+}
 const dot = (
-  <span className="absolute top-1/2 left-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-foreground bg-background" />
+  <span className="pointer-events-none absolute top-1/2 left-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-foreground bg-background" />
 );
 const HANDLES: HandleComponent = {
   top: dot,
   bottom: dot,
   left: dot,
   right: dot,
+  // El área está centrada en la esquina: el triángulo termina en su centro, dentro de la zona.
   bottomRight: (
-    <span className="absolute right-[10px] bottom-[10px] size-6 bg-foreground [clip-path:polygon(100%_0,100%_100%,0_100%)]" />
+    <span className="pointer-events-none absolute right-1/2 bottom-1/2 size-6 bg-foreground [clip-path:polygon(100%_0,100%_100%,0_100%)]" />
   ),
 };
 const RESIZE_SELECTED = { top: true, right: true, bottom: true, left: true, bottomRight: true };
@@ -69,7 +70,7 @@ export function ZoneEditor({ imageUrl, layout, aspectRatio, zones, onChange, sel
     onChange(zones.map((z) => (z.key === key ? clampZone({ ...z, ...patch }) : z)));
 
   function onZoneKey(e: KeyboardEvent, z: EditableZone) {
-    const n = zoneKeyAction(e.key, { shift: e.shiftKey, alt: e.altKey });
+    const n = zoneKeyAction(e.key, { shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey, meta: e.metaKey });
     if (!n) return;
     e.preventDefault(); // las flechas no hacen scroll
     onSelect(z.key);
@@ -103,7 +104,7 @@ export function ZoneEditor({ imageUrl, layout, aspectRatio, zones, onChange, sel
                 className={isSel ? 'rounded-[6px] shadow-md' : undefined}
                 style={isSel ? { zIndex: 10 } : undefined}
                 enableResizing={isSel ? RESIZE_SELECTED : false}
-                resizeHandleStyles={SIDE_HANDLES}
+                resizeHandleStyles={isSel ? handleStyles(z.w * width, z.h * height) : undefined}
                 resizeHandleComponent={HANDLES}
                 onDragStart={() => onSelect(z.key)}
                 onDragStop={(_e, d) => update(z.key, { x: d.x / width, y: d.y / height })}
@@ -132,7 +133,7 @@ export function ZoneEditor({ imageUrl, layout, aspectRatio, zones, onChange, sel
       </div>
       <p className="text-sm text-muted-foreground">
         Toca una zona para elegirla, arrástrala para moverla y usa las asas para cambiar su tamaño. Con el teclado: flechas
-        para mover y Alt + flechas para el tamaño (Mayús para pasos grandes).
+        para mover (Mayús para pasos grandes) y Mayús + Alt + flechas para el tamaño.
       </p>
     </div>
   );
