@@ -11,7 +11,8 @@ Rediseño completo (17 tareas + revisión final, commits ca42be6..HEAD). Lo que 
 Migración `20261021090000_security_hardening.sql` aplicada y tests pasados (`security_hardening.sql`, `rls_check.sql`, `rls_extra.sql`, `ai_quota.sql`): Storage 5 MB solo JPEG con rutas estrictas, 500 fotos/día por grupo y DELETE para admins; topes (5 grupos por usuario, 20 almacenes y 2000 materiales por grupo); no se pueden mover almacenes/zonas/material entre grupos; tope global de IA 200/día; fotos de préstamo validadas; el total no baja de lo prestado. En la app: `safeNext` idempotente, `server-only` en Gemini, validación de rutas/cantidades/fechas/ids/roles en el servidor, mensajes neutros en el registro y mensajes claros para los topes.
 
 ## Pendiente de Santi (panel de Supabase y Google)
-- Supabase → Authentication: CAPTCHA (Turnstile; avisar, la app necesita el widget), contraseña mínima 8, revisar Rate Limits (el login sale desde la IP del servidor).
+- Supabase → Authentication: contraseña mínima 8 y revisar Rate Limits (el login sale desde la IP del servidor).
+- Decisión de Santi (2026-10-20): sin CAPTCHA. Riesgo aceptado: registros automáticos con cuentas falsas; lo frenan los topes de grupos, fotos e IA.
 - Google AI Studio/Cloud: límite de gasto de la clave de Gemini.
 
 ## Antes de abrir Zulo a más clubs (backend)
