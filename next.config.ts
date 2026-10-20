@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
   // Solo en `next dev`: permite abrir la app desde el móvil en la wifi de casa.
-  allowedDevOrigins: ['192.168.*.*'],
+  allowedDevOrigins: ['192.168.*.*', '10.*.*.*'],
   partialPrefetching: true,
   poweredByHeader: false,
   async headers() {
