@@ -29,12 +29,12 @@ export function FloorPlan({ aspectRatio, layout, className }: Props) {
     <svg viewBox={`0 0 ${W} ${H}`} className={className} aria-hidden="true" focusable="false">
       <defs>
         <pattern id={`tile-${id}`} width="40" height="40" patternUnits="userSpaceOnUse">
-          <rect width="40" height="40" fill="#FAFAF7" />
-          <path d="M40 0H0V40" fill="none" stroke="#ECEAE4" strokeWidth="1.5" />
+          <rect width="40" height="40" style={{ fill: 'var(--plan-paper)' }} />
+          <path d="M40 0H0V40" fill="none" style={{ stroke: 'var(--plan-grid)' }} strokeWidth="1.5" />
         </pattern>
         <pattern id={`hatch-${id}`} width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-          <rect width="10" height="10" fill="#fff" />
-          <line x1="0" y1="0" x2="0" y2="10" stroke="#2B2B2B" strokeWidth="4" />
+          <rect width="10" height="10" style={{ fill: 'var(--plan-paper)' }} />
+          <line x1="0" y1="0" x2="0" y2="10" style={{ stroke: 'var(--plan-ink)' }} strokeWidth="4" />
         </pattern>
       </defs>
       <rect width={W} height={H} fill={`url(#tile-${id})`} />
@@ -45,16 +45,15 @@ export function FloorPlan({ aspectRatio, layout, className }: Props) {
         const vertical = c.h * H > c.w * W;
         return (
           <g key={`c${i}`}>
-            <rect x={c.x * W} y={c.y * H} width={c.w * W} height={c.h * H} fill="none" stroke="#B8B4AA" strokeWidth="2" strokeDasharray="10 10" />
+            <rect x={c.x * W} y={c.y * H} width={c.w * W} height={c.h * H} fill="none" style={{ stroke: 'var(--plan-line)' }} strokeWidth="2" strokeDasharray="10 10" />
             <text
               x={cx}
               y={cy}
               fontSize="22"
               letterSpacing="8"
-              fill="#9A968C"
+              style={{ fill: 'var(--plan-label)', fontFamily: 'var(--font-mono), ui-monospace, monospace' }}
               textAnchor="middle"
               dominantBaseline="middle"
-              fontFamily="Helvetica, Arial, sans-serif"
               transform={vertical ? `rotate(-90 ${cx} ${cy})` : undefined}
             >
               {(c.label || 'Pasillo').toUpperCase()}
@@ -65,7 +64,7 @@ export function FloorPlan({ aspectRatio, layout, className }: Props) {
 
       {WALLS.flatMap((wall) =>
         wallSegments(wall, layout.doors).map((seg, i) => (
-          <rect key={`${wall}${i}`} {...wallRect(wall, seg)} fill={`url(#hatch-${id})`} stroke="#2B2B2B" strokeWidth="2" />
+          <rect key={`${wall}${i}`} {...wallRect(wall, seg)} fill={`url(#hatch-${id})`} style={{ stroke: 'var(--plan-ink)' }} strokeWidth="2" />
         )),
       )}
 
@@ -73,11 +72,11 @@ export function FloorPlan({ aspectRatio, layout, className }: Props) {
         const s = doorSwing(d, W, H);
         return (
           <g key={`d${i}`}>
-            <line x1={s.hinge.x} y1={s.hinge.y} x2={s.leafEnd.x} y2={s.leafEnd.y} stroke="#2B2B2B" strokeWidth="4" />
+            <line x1={s.hinge.x} y1={s.hinge.y} x2={s.leafEnd.x} y2={s.leafEnd.y} style={{ stroke: 'var(--plan-ink)' }} strokeWidth="4" />
             <path
               d={`M ${s.leafEnd.x} ${s.leafEnd.y} A ${s.radius} ${s.radius} 0 0 ${s.sweep} ${s.arcEnd.x} ${s.arcEnd.y}`}
               fill="none"
-              stroke="#2B2B2B"
+              style={{ stroke: 'var(--plan-ink)' }}
               strokeWidth="1.5"
               strokeDasharray="6 5"
             />
