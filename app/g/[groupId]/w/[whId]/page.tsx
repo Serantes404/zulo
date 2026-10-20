@@ -61,7 +61,6 @@ async function Warehouse({ params }: { params: Params }) {
 
   return (
     <main className="mx-auto max-w-3xl space-y-2 px-4 pb-6 lg:max-w-5xl">
-      <h1 className="sr-only">{wh.name}</h1>
       <div className="flex items-center gap-1 pt-2">
         <Link
           href={`/g/${groupId}`}

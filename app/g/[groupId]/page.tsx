@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 import { Map as MapIcon, Warehouse } from 'lucide-react';
 import { requireUser, getRole } from '@/lib/auth';
 import { isOverdue } from '@/lib/dates';
+import { formatShortDate } from '@/lib/loanSummary';
 import { initials } from '@/lib/nav';
 import { summarizeWarehouse } from '@/lib/warehouseSummary';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -20,10 +21,6 @@ import { WarehouseMenu } from './WarehouseMenu';
 type Params = Promise<{ groupId: string }>;
 
 const overline = 'text-xs font-medium uppercase tracking-wider text-muted-foreground';
-
-function formatDue(due: string): string {
-  return new Date(`${due}T00:00:00Z`).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', timeZone: 'UTC' });
-}
 
 export const metadata: Metadata = { title: 'Grupo' };
 
@@ -120,9 +117,9 @@ async function GroupContent({ params }: { params: Params }) {
                   <Link href={`/item/${l.items.id}`} className="flex min-h-11 items-center justify-between gap-2 p-3 hover:bg-muted/50 outline-none focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
                     <span className="min-w-0 truncate">{l.items.name} ×{l.quantity}</span>
                     {isOverdue(l.due_date) ? (
-                      <Badge variant="danger">Vencido · {formatDue(l.due_date)}</Badge>
+                      <Badge variant="danger">Vencido · {formatShortDate(l.due_date)}</Badge>
                     ) : (
-                      <span className="shrink-0 text-sm text-muted-foreground">Vence {formatDue(l.due_date)}</span>
+                      <span className="shrink-0 text-sm text-muted-foreground">Vence {formatShortDate(l.due_date)}</span>
                     )}
                   </Link>
                 </li>
