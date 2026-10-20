@@ -31,7 +31,7 @@ import { detectZonesAction, previewPlanImage, saveZones } from './actions';
 
 type Pending = { path: string; source: PlanSource };
 type AiReason = keyof typeof AI_MESSAGES;
-type Confirm = 'redraw' | 'redetect' | 'exit';
+type Confirm = 'redraw' | 'redetect' | 'exit' | 'discard';
 const clampAspect = (a: number) => Math.min(MAX_ASPECT, Math.max(MIN_ASPECT, a));
 
 const AI_MESSAGES = {
@@ -54,6 +54,11 @@ const CONFIRMS: Record<Confirm, { title: string; body: string; action: string }>
     title: '¿Volver a detectar las zonas?',
     body: 'Las zonas actuales se reemplazan por las que detecte la IA.',
     action: 'Volver a detectar',
+  },
+  discard: {
+    title: '¿Descartar el boceto?',
+    body: 'Lo dibujado en el lienzo se pierde. No se puede deshacer.',
+    action: 'Descartar boceto',
   },
   exit: {
     title: '¿Salir sin guardar?',
@@ -220,6 +225,7 @@ export function PlanEditorClient({
 
   function onConfirm(kind: Confirm) {
     if (kind === 'redraw') setSketching(true);
+    else if (kind === 'discard') startManual();
     else if (kind === 'redetect') void runDetection(source, pending ?? undefined);
     else router.push(`/g/${groupId}/w/${warehouseId}`);
   }
@@ -420,7 +426,7 @@ export function PlanEditorClient({
                   Subir imagen
                 </Button>
                 {!showEditor && (
-                  <Button variant="ghost" onClick={startManual} disabled={uploadingSketch}>
+                  <Button variant="ghost" onClick={() => (sketching && !sketchEmpty ? setConfirm('discard') : startManual())} disabled={uploadingSketch}>
                     <LayoutGrid aria-hidden="true" strokeWidth={1.75} className="size-5" />
                     Crear las zonas a mano
                   </Button>

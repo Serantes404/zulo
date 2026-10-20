@@ -26,14 +26,18 @@ type Props = { zone: { id: string; label: string }; groupId: string; warehouseId
 
 export function AddItemDialog({ zone, groupId, warehouseId }: Props) {
   const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
   const [qty, setQty] = useState('1');
+  const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
   const toast = useToast();
 
   function onOpenChange(next: boolean) {
     setOpen(next);
     if (next) {
+      setName('');
       setQty('1');
+      setNotes('');
       setError(null);
     }
   }
@@ -48,12 +52,13 @@ export function AddItemDialog({ zone, groupId, warehouseId }: Props) {
       setError('Revisa el nombre (hasta 80 caracteres) y la cantidad (de 1 a 9999).');
       return;
     }
-    try {
-      await createItem(groupId, warehouseId, zone.id, formData);
-    } catch {
-      setError('No se ha podido añadir el material. Inténtalo de nuevo.');
+    // Sin try/catch: si la sesión caducó, el redirect a /login lo gestiona Next.
+    const r = await createItem(groupId, warehouseId, zone.id, formData);
+    if ('error' in r) {
+      setError(r.error);
       return;
     }
+    setError(null);
     setOpen(false);
     toast({ title: 'Material añadido' });
   }
@@ -78,6 +83,8 @@ export function AddItemDialog({ zone, groupId, warehouseId }: Props) {
               name="name"
               required
               maxLength={80}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               placeholder="Linternas"
               autoComplete="off"
               aria-invalid={error ? true : undefined}
@@ -109,7 +116,7 @@ export function AddItemDialog({ zone, groupId, warehouseId }: Props) {
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="item-notes">Notas (opcional)</Label>
-            <Textarea id="item-notes" name="notes" maxLength={500} />
+            <Textarea id="item-notes" name="notes" maxLength={500} value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
           <FormError id="item-error">{error}</FormError>
           <Submit />
