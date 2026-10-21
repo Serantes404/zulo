@@ -35,7 +35,7 @@ export default function Landing() {
             El material de tu club, siempre localizado.
           </h1>
           <p className="text-lg text-muted-foreground">
-            <span translate="no">Zulo</span> ayuda a los responsables de material de clubs a saber qué hay en el almacén, dónde está y quién se lo ha llevado.
+            Para que los responsables de material de tu club sepan qué hay en el almacén, dónde está y quién se lo ha llevado.
           </p>
           <Suspense fallback={<PrimaryCta loggedIn={false} />}>
             <SessionCta />
