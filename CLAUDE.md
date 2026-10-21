@@ -36,7 +36,7 @@ App de inventario visual para clubs: foto del almacén → la IA (API de Gemini)
 - **Ledgers:** `.superpowers/sdd/<plan>/progress.md` para cada plan (zulo-plan, plano-profesional-plan, security-pre-deploy, frontend-redesign-design). Auditoría de seguridad: `.superpowers/sdd/security-audit/` (8 tareas pendientes: Storage, grants por columna, RGPD, CAPTCHA, etc.).
 - **Cambios respecto al plan** (detalle en "Rulings durante la ejecución"): IA con la API de Gemini en vez de Ollama; login con email+contraseña en vez de magic link ("Confirm email" desactivado en Supabase, sin recuperación de contraseña); todas las páginas leen sesión/params dentro de `<Suspense>` por `cacheComponents: true`.
 - **Pendiente de decidir con Santi:** (1) migración para que `groups.created_by` y `loans.user_id` sean `on delete set null` (ahora impiden borrar usuarios; RGPD); (2) ~~aviso de `Date.now()`~~ resuelto con `connection()` en `lib/supabase/server.ts`; (3) la prueba de la IA con fotos reales (T3 paso 9) sigue pendiente y es el mayor riesgo.
-- **Repo:** GitHub privado https://github.com/Serantes404/zulo (remote `origin`, rama `main`; `gh` instalado y autenticado). Subido el 2026-10-20 tras la auditoría de seguridad.
+- **Repo:** GitHub PÚBLICO (desde el 2026-10-21, lo pide la entrega) https://github.com/Serantes404/zulo (remote `origin`, rama `main`; `gh` instalado y autenticado). Subido el 2026-10-20 tras la auditoría de seguridad.
 - **Prioridades:** entrega hacia el 2026-10-21. Primero funcionalidad; el frontend bonito va al final. Adelantar el despliegue a Vercel (T14) a mitad de semana.
 
 ## Reglas
