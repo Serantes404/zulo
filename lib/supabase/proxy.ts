@@ -25,8 +25,9 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
   const path = request.nextUrl.pathname;
-  // Con sesión, la portada, /login y /signup llevan directamente a donde iba (por defecto /app).
-  if (user && (path === '/' || isAuthPath(path))) {
+  // Con sesión, /login y /signup llevan directamente a donde iba (por defecto /app).
+  // La portada sí se puede ver con sesión: es la página "Qué es Zulo" de la cabecera.
+  if (user && isAuthPath(path)) {
     return NextResponse.redirect(new URL(safeNext(request.nextUrl.searchParams.get('next')), request.url));
   }
   if (!user && path !== '/' && !isAuthPath(path)) {

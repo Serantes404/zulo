@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
-import { LogOut } from 'lucide-react';
+import Link from 'next/link';
+import { Info, LogOut } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { signOut } from '@/app/actions';
 import { initials } from '@/lib/nav';
@@ -26,10 +27,14 @@ export async function Header() {
       <div className="mx-auto flex h-full max-w-5xl items-center gap-2 px-3">
         <Logo />
         <GroupSwitcher groups={groups} />
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-1 md:gap-2">
           <Suspense fallback={null}>
             <HeaderTabs />
           </Suspense>
+          <Button variant="ghost" size="lg" className="px-2.5 lg:px-3" nativeButton={false} render={<Link href="/" title="Qué es Zulo" />}>
+            <Info aria-hidden="true" />
+            <span className="sr-only lg:not-sr-only">Qué es Zulo</span>
+          </Button>
           <AvatarMenu name={fullName ?? user.email ?? 'Sin nombre'} initials={initials(fullName, user.email)} />
           {/* Salir siempre visible (no dentro de un menú): lo pide el contrato de evaluación (data-testid="logout"). */}
           <form action={signOut}>

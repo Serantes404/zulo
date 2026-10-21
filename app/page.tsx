@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Camera, HandCoins, MapPin } from 'lucide-react';
+import { createClient } from '@/lib/supabase/server';
 import { Logo } from '@/components/Logo';
 import { buttonVariants } from '@/components/ui/button';
 import { PlanArt } from './login/PlanArt';
@@ -17,16 +19,14 @@ const STEPS = [
   { icon: HandCoins, title: 'Presta con foto y fecha', text: 'Quién se lo llevó, cuándo lo devuelve y en qué estado vuelve.' },
 ];
 
-/** Portada pública (con sesión, el proxy manda a /app): qué es, para quién y un único botón para crear cuenta. */
+/** Portada pública: qué es, para quién y un único botón para crear cuenta. Con sesión es "Qué es Zulo" y el botón va a /app. */
 export default function Landing() {
   return (
     <main className="mx-auto w-full max-w-5xl px-4 pb-12">
-      <nav aria-label="Cuenta" className="flex h-14 items-center justify-between">
-        <Logo href="/" />
-        <Link href="/login" className="inline-flex min-h-11 items-center text-sm font-medium underline-offset-4 hover:underline">
-          Entrar
-        </Link>
-      </nav>
+      {/* Con sesión ya está la cabecera de la app: esta barra solo se pinta sin sesión. */}
+      <Suspense fallback={null}>
+        <GuestNav />
+      </Suspense>
 
       <section className="grid gap-8 pt-6 md:grid-cols-2 md:items-center md:pt-12">
         <div className="space-y-5">
@@ -37,11 +37,9 @@ export default function Landing() {
           <p className="text-lg text-muted-foreground">
             Zulo ayuda a los responsables de material de clubs a saber qué hay en el almacén, dónde está y quién se lo ha llevado.
           </p>
-          <Link href="/signup" className={buttonVariants({ size: 'lg', className: 'h-12 px-6 text-base' })}>
-            Crear cuenta gratis
-            <ArrowRight aria-hidden="true" />
-          </Link>
-          <p className="text-sm text-muted-foreground">Gratis. Solo email y contraseña.</p>
+          <Suspense fallback={<PrimaryCta loggedIn={false} />}>
+            <SessionCta />
+          </Suspense>
         </div>
         <PlanArt className="w-full rounded-xl border border-plan-line" />
       </section>
@@ -62,5 +60,40 @@ export default function Landing() {
         </ol>
       </section>
     </main>
+  );
+}
+
+async function isLoggedIn() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  return !!user;
+}
+
+function PrimaryCta({ loggedIn }: { loggedIn: boolean }) {
+  return (
+    <div className="space-y-3">
+      <Link href={loggedIn ? '/app' : '/signup'} className={buttonVariants({ size: 'lg', className: 'h-12 px-6 text-base' })}>
+        {loggedIn ? 'Ir a mis grupos' : 'Crear cuenta gratis'}
+        <ArrowRight aria-hidden="true" />
+      </Link>
+      {!loggedIn && <p className="text-sm text-muted-foreground">Gratis. Solo email y contraseña.</p>}
+    </div>
+  );
+}
+
+// Con Cache Components, la sesión solo se lee dentro de un <Suspense>.
+async function SessionCta() {
+  return <PrimaryCta loggedIn={await isLoggedIn()} />;
+}
+
+async function GuestNav() {
+  if (await isLoggedIn()) return null;
+  return (
+    <nav aria-label="Cuenta" className="flex h-14 items-center justify-between">
+      <Logo href="/" />
+      <Link href="/login" className="inline-flex min-h-11 items-center text-sm font-medium underline-offset-4 hover:underline">
+        Entrar
+      </Link>
+    </nav>
   );
 }
