@@ -11,7 +11,7 @@ export function Logo({ className, href = '/app' }: { className?: string; href?: 
         className,
       )}
     >
-      <span role="img" aria-label="Zulo" className="inline-flex items-baseline text-lg font-bold tracking-tight">
+      <span role="img" aria-label="Zulo" translate="no" className="inline-flex items-baseline text-lg font-bold tracking-tight">
         zulo
         <span aria-hidden="true" className="ml-0.5 size-1.5 rounded-full bg-signal" />
       </span>

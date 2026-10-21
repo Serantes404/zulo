@@ -18,7 +18,7 @@ export function AuthPage({ mode, searchParams }: { mode: AuthMode; searchParams:
         </div>
       </section>
       <div className="w-full max-w-sm space-y-6 p-4 md:order-2 md:mx-auto md:p-0">
-        <h1 className="text-xl font-semibold">{mode === 'signup' ? 'Crea tu cuenta' : 'Entra en Zulo'}</h1>
+        <h1 className="text-xl font-semibold">{mode === 'signup' ? 'Crea tu cuenta' : <>Entra en <span translate="no">Zulo</span></>}</h1>
         {/* Con Cache Components, searchParams solo se puede leer dentro de un <Suspense>. */}
         <Suspense fallback={null}>
           <AuthFormFromParams mode={mode} searchParams={searchParams} />

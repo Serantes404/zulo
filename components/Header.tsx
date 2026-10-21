@@ -33,7 +33,7 @@ export async function Header() {
           </Suspense>
           <Button variant="ghost" size="lg" className="px-2.5 lg:px-3" nativeButton={false} render={<Link href="/" title="Qué es Zulo" />}>
             <Info aria-hidden="true" />
-            <span className="sr-only lg:not-sr-only">Qué es Zulo</span>
+            <span className="sr-only lg:not-sr-only">Qué es <span translate="no">Zulo</span></span>
           </Button>
           <AvatarMenu name={fullName ?? user.email ?? 'Sin nombre'} initials={initials(fullName, user.email)} />
           {/* Salir siempre visible (no dentro de un menú): lo pide el contrato de evaluación (data-testid="logout"). */}
