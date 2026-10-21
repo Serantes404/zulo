@@ -22,6 +22,9 @@ Migración `20261021090000_security_hardening.sql` aplicada y tests pasados (`se
 - Test SQL de "vencido" con un préstamo que venció ayer en Madrid.
 - Informes completos de la auditoría: carpeta local `.superpowers/sdd/security-audit-2026-10-20/` (no versionada).
 
+## Después de la entrega
+- **Salas que no son rectangulares en el plano dibujado** (triángulo, círculo, L…). Hoy `Layout` asume 4 paredes (`top/bottom/left/right`) y la IA fuerza el boceto a un rectángulo; con "Plano con foto" cualquier forma ya funciona porque la foto es el fondo. Idea: añadir a `Layout` un contorno opcional como polígono en coordenadas 0-1 (el círculo, como polígono de muchos lados o forma `ellipse`), puertas como tramo a lo largo del perímetro (0-1) en vez de por pared, pedir el contorno en el prompt del boceto (`lib/ai/layout.ts`), dibujarlo en `FloorPlan` y `floorPlanGeometry`. Sin contorno = rectángulo, así los planos guardados siguen igual. Las zonas siguen siendo rectángulos. Ojo con el CHECK de 8 KB de `warehouses.layout`.
+
 ## Mejoras pequeñas aparcadas
 - Pestaña "Buscar" en la página del grupo: con un solo almacén podría ir directa a su buscador (necesita pasar el dato al layout).
 - Títulos de pestaña con el nombre del grupo/almacén (hoy son estáticos).
