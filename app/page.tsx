@@ -73,7 +73,7 @@ function PrimaryCta({ loggedIn }: { loggedIn: boolean }) {
   return (
     <div className="space-y-3">
       <Link href={loggedIn ? '/app' : '/signup'} className={buttonVariants({ size: 'lg', className: 'h-12 px-6 text-base' })}>
-        {loggedIn ? 'Ir a mis grupos' : 'Crear cuenta gratis'}
+        {loggedIn ? 'Ir a mis grupos' : '¡Empieza a organizar!'}
         <ArrowRight aria-hidden="true" />
       </Link>
       {!loggedIn && <p className="text-sm text-muted-foreground">Gratis. Solo email y contraseña.</p>}
